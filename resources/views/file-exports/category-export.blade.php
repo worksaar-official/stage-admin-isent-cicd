@@ -23,7 +23,8 @@
                     <th>{{ translate('Category_Name') }}</th>
                     <th>{{ translate('Category_ID') }}</th>
                     <th>{{ translate('Module') }}</th>
-                    <th>{{ translate('priority') }}</th>
+                    <th>{{ translate('Priority') }}</th>
+                    <th>{{ translate('Featured') }}</th>
                     @if ($data['categoryWiseTax'])
                         <th class="border-0 w--1">{{ translate('messages.Vat/Tax') }}</th>
                     @endif
@@ -45,24 +46,24 @@
                             };
                         @endphp
                         <td>{{ $return_value }}</td>
-                        <td>{{ $category->status == 1 ? translate('messages.Active') : translate('messages.Inactive') }}
-                        </td>
+                        <td>{{ $category->featured == 1 ? translate('messages.Yes') : '--' }} </td>
                         @if ($data['categoryWiseTax'])
-                            <td>
-                                <span class="d-block font-size-sm text-body">
+                        <td>
+                            <span class="d-block font-size-sm text-body">
 
-                                    @forelse ($category?->taxVats?->pluck('tax.name', 'tax.tax_rate')->toArray() as $key => $item)
-                                        <br>
-                                        <span> {{ $item }} : <span class="font-bold">
-                                                ({{ $key }}%)
-                                            </span> </span>
-                                        <br>
-                                    @empty
-                                        <span> {{ translate('messages.no_tax') }} </span>
-                                    @endforelse
-                                </span>
-                            </td>
+                                @forelse ($category?->taxVats?->pluck('tax.name', 'tax.tax_rate')->toArray() as $key => $item)
+                                <br>
+                                <span> {{ $item }} : <span class="font-bold">
+                                    ({{ $key }}%)
+                                </span> </span>
+                                <br>
+                                @empty
+                                <span> {{ translate('messages.no_tax') }} </span>
+                                @endforelse
+                            </span>
+                        </td>
                         @endif
+                        <td>{{ $category->status == 1 ? translate('messages.Active') : translate('messages.Inactive') }}  </td>
                     </tr>
                 @endforeach
             </tbody>

@@ -73,7 +73,7 @@
             <!--- Vendor Tax Report Here -->
             <div class="card p-20 mt-5">
                 <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-20">
-                    <h4 class="mb-0">{{ translate('All Vendor Taxes') }}</h4>
+                    <h4 class="mb-0">{{ translate('All Taxes') }}</h4>
                     <div class="search--button-wrapper justify-content-end">
                         <div class="hs-unfold mr-2">
                             <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle h--40px" href="javascript:;"

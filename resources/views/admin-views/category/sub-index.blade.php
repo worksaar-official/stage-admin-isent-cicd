@@ -79,6 +79,19 @@
                         </div>
                         <input name="position" value="1" hidden>
 
+                          <div class="form-group col-sm-6">
+                                <label class="input-label" for="">
+                                    {{ translate('messages.Priority') }}
+                                </label>
+                                <select required name="priority"
+                                    data-original-title="{{ translate('messages.Select_Priority') }}"
+                                    class="custom-select">
+                                    <option value="0">{{ translate('messages.Normal') }}</option>
+                                    <option value="1">{{ translate('messages.Medium') }}</option>
+                                    <option value="2">{{ translate('messages.High') }}</option>
+                                </select>
+                            </div>
+
                         <div class="col-sm-12">
                             <div class="btn--container justify-content-end">
                                 <button type="reset" id="reset_btn" class="btn btn--reset">{{translate('messages.reset')}}</button>
@@ -97,7 +110,7 @@
                     <form   class="search-form">
                         <!-- Search -->
                         <div class="input-group input--group">
-                            <input id="datatableSearch" name="search" value="{{ request()?->search ?? null }}"  type="search" class="form-control" placeholder="{{translate('messages.ex_:_search_sub_categories')}}" aria-label="{{translate('messages.ex_:_sub_categories')}}">
+                            <input id="datatableSearch" data-reload_url="{{url()->full()}}" name="search" value="{{ request()?->search ?? null }}"  type="search" class="form-control" placeholder="{{translate('messages.ex_:_search_sub_categories')}}" aria-label="{{translate('messages.ex_:_sub_categories')}}">
                             <input type="hidden" name="position" value="1">
                             <input type="hidden" name="sub_category" value="1">
                             <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
@@ -186,13 +199,29 @@
                                     </label>
                                 </td>
                                 <td>
-                                    <label class="toggle-switch toggle-switch-sm" for="featuredCheckbox{{$category->id}}">
-                                        <input type="checkbox" data-url="{{route('admin.category.featured',[$category['id'],$category->featured?0:1])}}" class="toggle-switch-input redirect-url" id="featuredCheckbox{{$category->id}}" {{$category->featured?'checked':''}}>
-                                        <span class="toggle-switch-label mx-auto">
-                                            <span class="toggle-switch-indicator"></span>
-                                        </span>
-                                    </label>
-                                </td>
+                                        <label class="toggle-switch toggle-switch-sm"
+                                            for="featuredCheckbox{{ $category->id }}">
+                                            <input type="checkbox" data-id="featuredCheckbox{{ $category->id }}"
+                                                data-type="status"
+                                                data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                                data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                                data-title-on="{{ translate('Do you want to Featured this sub category ?') }}"
+                                                data-title-off="{{ translate('Don’t you want to Featured this sub category?') }}"
+                                                data-text-on="<p>{{ translate('If you turn on this sub category as a featured category it will show in customer app landing page.') }}"
+                                                data-text-off="<p>{{ translate('If you turn off this sub category from featured category it will not show in customer app landing page.') }}</p>"
+                                                class="toggle-switch-input dynamic-checkbox"
+                                                id="featuredCheckbox{{ $category->id }}"
+                                                {{ $category->featured ? 'checked' : '' }}>
+                                            <span class="toggle-switch-label mx-auto">
+                                                <span class="toggle-switch-indicator"></span>
+                                            </span>
+                                        </label>
+
+                                        <form
+                                            action="{{ route('admin.category.featured', [$category['id'], $category->featured ? 0 : 1]) }}"
+                                            method="get" id="featuredCheckbox{{ $category->id }}_form">
+                                        </form>
+                                    </td>
                                 <td>
                                     <form action="{{route('admin.category.priority',$category->id)}}" class="priority-form">
                                         <select name="priority" id="priority" class="form-control priority-select form--control-select mx-auto {{$category->priority == 0 ? 'text-title':''}} {{$category->priority == 1 ? 'text-info':''}} {{$category->priority == 2 ? 'text-success':''}}">
@@ -204,9 +233,13 @@
                                 </td>
                                 <td>
                                     <div class="btn--container justify-content-center">
-                                        <a class="btn action-btn btn--primary btn-outline-primary"
-                                            href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit_category')}}"><i class="tio-edit"></i>
-                                        </a>
+                                             <a class="btn action-btn btn-outline-theme-dark offcanvas-trigger data-info-show" href="javascript:void(0)"
+                                                data-id="{{ $category['id'] }}"
+                                                data-url="{{ route('admin.category.edit', [$category['id']]) }}"
+
+                                            data-target="#offcanvas__categoryBtn">
+                                                <i class="tio-edit"></i>
+                                            </a>
                                         <a class="btn action-btn btn--danger btn-outline-danger form-alert" href="javascript:"
                                            data-id="category-{{$category['id']}}" data-message="{{ translate('Want to delete this category') }}" title="{{translate('messages.delete_category')}}"><i class="tio-delete-outlined"></i>
                                         </a>
@@ -237,21 +270,16 @@
             @endif
         </div>
     </div>
+        <div id="offcanvas__categoryBtn" class="custom-offcanvas d-flex flex-column justify-content-between">
+         <div id="data-view" class="h-100">
+        </div>
+    </div>
+    <div id="offcanvasOverlay" class="offcanvas-overlay"></div>
+
+
+
 @endsection
 
 @push('script_2')
     <script src="{{asset('public/assets/admin')}}/js/view-pages/sub-category-index.js"></script>
-    <script>
-        "use strict";
-            $('.location-reload-to-category').on('click', function() {
-                const url = $(this).data('url');
-                let nurl = new URL(url);
-                nurl.searchParams.delete('search');
-                location.href = nurl;
-            });
-
-            $('#reset_btn').click(function(){
-            $('#exampleFormControlSelect1').val(null).trigger('change');
-            })
-            </script>
 @endpush

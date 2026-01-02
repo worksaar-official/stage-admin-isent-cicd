@@ -94,7 +94,7 @@ class ItemController extends Controller
         $images = [];
 
         if ($request->item_id && $request?->product_gellary == 1) {
-            $item_data = Item::withoutGlobalScope(StoreScope::class)->select(['image', 'images'])->findOrfail($request->item_id);
+            $item_data = Item::withoutGlobalScope(StoreScope::class)->findOrfail($request->item_id);
             if (!$request->has('image')) {
 
                 $oldDisk = 'public';
@@ -112,17 +112,20 @@ class ItemController extends Controller
                 $newDisk = Helpers::getDisk();
 
                 try {
-                    if (Storage::disk($oldDisk)->exists($oldPath)) {
-                        if (!Storage::disk($newDisk)->exists($dir)) {
-                            Storage::disk($newDisk)->makeDirectory($dir);
+                    if($newDisk == 's3' && $item_data->image){
+                            Storage::disk($newDisk)->put($newPath, Storage::disk($oldDisk)->get($oldPath));
+                        } else{
+                        if (Storage::disk($oldDisk)->exists($oldPath)) {
+                            if (!Storage::disk($newDisk)->exists($dir)) {
+                                Storage::disk($newDisk)->makeDirectory($dir);
+                            }
+                            $fileContents = Storage::disk($oldDisk)->get($oldPath);
+                            Storage::disk($newDisk)->put($newPath, $fileContents);
                         }
-                        $fileContents = Storage::disk($oldDisk)->get($oldPath);
-                        Storage::disk($newDisk)->put($newPath, $fileContents);
                     }
                 } catch (\Exception $e) {
                 }
             }
-
             foreach ($item_data->images as $key => $value) {
                 if (!in_array(is_array($value) ?   $value['img'] : $value, explode(",", $request->removedImageKeys))) {
                     $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
@@ -133,13 +136,18 @@ class ItemController extends Controller
                     $dir = 'product/';
                     $newDisk = Helpers::getDisk();
                     try {
-                        if (Storage::disk($oldDisk)->exists($oldPath)) {
-                            if (!Storage::disk($newDisk)->exists($dir)) {
-                                Storage::disk($newDisk)->makeDirectory($dir);
+                        if($newDisk == 's3'){
+                            Storage::disk($newDisk)->put($newPath, Storage::disk($oldDisk)->get($oldPath));
+                        } else{
+                            if (Storage::disk($oldDisk)->exists($oldPath)) {
+                                if (!Storage::disk($newDisk)->exists($dir)) {
+                                    Storage::disk($newDisk)->makeDirectory($dir);
+                                }
+                                $fileContents = Storage::disk($oldDisk)->get($oldPath);
+                                Storage::disk($newDisk)->put($newPath, $fileContents);
                             }
-                            $fileContents = Storage::disk($oldDisk)->get($oldPath);
-                            Storage::disk($newDisk)->put($newPath, $fileContents);
                         }
+
                     } catch (\Exception $e) {
                     }
                     $images[] = ['img' => $newFileName, 'storage' => Helpers::getDisk()];
@@ -330,7 +338,7 @@ class ItemController extends Controller
         $item->add_ons = $request->has('addon_ids') ? json_encode($request->addon_ids) : json_encode([]);
         $item->store_id = $request->store_id;
         $item->maximum_cart_quantity = $request->maximum_cart_quantity;
-        $item->veg = $request->veg;
+        $item->veg = $request->veg ?? 0;
         $item->module_id = Config::get('module.current_module_id');
         $module_type = Config::get('module.current_module_type');
         if ($module_type == 'grocery') {
@@ -666,7 +674,7 @@ class ItemController extends Controller
         $item->stock = $request->current_stock ?? 0;
         $item->is_halal = $request->is_halal ?? 0;
         $item->organic = $request->organic ?? 0;
-        $item->veg = $request->veg;
+        $item->veg = $request->veg ?? 0;
         $item->images = $images;
         if (Helpers::get_mail_status('product_approval') && $request?->temp_product) {
 
@@ -1026,11 +1034,19 @@ class ItemController extends Controller
         }
 
         foreach ($items as $row) {
-            $res .= '<option value="' . $row->id . '" ';
-            if ($request->data) {
-                $res .= in_array($row->id, $request->data) ? 'selected ' : '';
+            $selected = '';
+
+            if (!empty($request->data) && in_array($row->id, (array) $request->data)) {
+                $selected = 'selected';
             }
-            $res .= '>' . $row->name . ' (' . $row->store->name . ')' . '</option>';
+
+            $storeName = $row->store->name ?? '';
+            $stock = $row->stock ?? 0;
+
+            $res .= '<option value="' . e($row->id) . '" ' . $selected . '>'
+                . e($row->name) . ' ('.translate('Stock:').' ' . e($stock) . ')'
+                . ($storeName ? ' (' . e($storeName) . ')' : '')
+                . '</option>';
         }
         return response()->json([
             'options' => $res,
@@ -1093,14 +1109,14 @@ class ItemController extends Controller
             ->latest()->paginate(config('default_pagination'));
         $store = $store_id != 'all' ? Store::findOrFail($store_id) : null;
         $category = $category_id != 'all' ? Category::findOrFail($category_id) : null;
-        $sub_categories = $category_id != 'all' ? Category::where('parent_id', $category_id)->get(['id', 'name']) : [];
+        $sub_category = $sub_category_id != 'all' ? Category::findOrFail($sub_category_id) : null;
         $condition = $condition_id != 'all' ? CommonCondition::findOrFail($condition_id) : [];
         $brand = $brand_id != 'all' ? Brand::findOrFail($brand_id) : [];
 
         $taxData = Helpers::getTaxSystemType(getTaxVatList: false);
         $productWiseTax = $taxData['productWiseTax'];
 
-        return view('admin-views.product.list', compact('items', 'store', 'category', 'type', 'sub_categories', 'condition','productWiseTax'));
+        return view('admin-views.product.list', compact('items', 'store', 'category', 'type', 'sub_category', 'condition','productWiseTax'));
     }
 
     public function remove_image(Request $request)
@@ -1968,21 +1984,13 @@ class ItemController extends Controller
         $item->description =  $data->description;
 
 
-        if ($item->image && $item->image !== $data->image) {
+        if ($item->image) {
             Helpers::check_and_delete('product/', $item['image']);
-        }
-
-        $newImages = [];
-        foreach (($data->images ?? []) as $v) {
-            $v = is_array($v) ? $v : ['img' => $v, 'storage' => 'public'];
-            $newImages[] = $v['img'];
         }
 
         foreach ($item->images as $value) {
             $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
-            if (!in_array($value['img'], $newImages)) {
-                Helpers::check_and_delete('product/', $value['img']);
-            }
+            Helpers::check_and_delete('product/', $value['img']);
         }
 
         $item->image = $data->image;

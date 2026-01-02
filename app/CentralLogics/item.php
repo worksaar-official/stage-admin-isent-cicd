@@ -566,9 +566,7 @@ class ProductLogic
         if ($filter && in_array('most_loved', $filter)) {
             $withCount[] = 'whislists';
         }
-        if ($best_reviewed_item_sort_by_general === 'review_count') {
-            $withCount[] = 'reviews';
-        }
+      
 
         $query = Item::with('store')->
             whereHas('store', function($query)use($zone_id){

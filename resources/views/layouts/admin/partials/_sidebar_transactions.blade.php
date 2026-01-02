@@ -69,6 +69,14 @@
                             </a>
                         </li>
                     @endif
+                    @if (\App\CentralLogics\Helpers::module_permission_check('withdraw_list'))
+                    <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/delivery-man/withdraw*') ? 'active' : '' }}">
+                        <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.transactions.delivery-man.withdraw_list') }}" title="{{ translate('messages.deliveryman_withdraws') }}">
+                            <i class="tio-table nav-icon"></i>
+                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('deliveryman_withdraws') }}</span>
+                        </a>
+                    </li>
+                    @endif
                     <!-- End withdraw -->
                     @if (\App\CentralLogics\Helpers::module_permission_check('disbursement'))
                         <li

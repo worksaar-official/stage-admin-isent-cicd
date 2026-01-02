@@ -167,7 +167,36 @@ class POSController extends Controller
             'view' => view('vendor-views.pos._address', compact('address'))->render(),
         ]);
     }
+    private function get_stocks($product,$selected_item){
+        try {
+            if($product->module->module_type == 'food'){
+                return null;
+            }
+            $choice_options=   json_decode($product?->choice_options, true);
+            $variation=  json_decode($product?->variations, true);
 
+            if(is_array($choice_options) && is_array($variation)  &&  count($choice_options) == 0 && count($variation) == 0 ){
+                return $product->stock ?? null ;
+            }
+
+            $choiceNames = array_column($choice_options, 'name');
+            $variations = array_map(function ($choiceName) use ($selected_item) {
+                return str_replace(' ', '', $selected_item[$choiceName]);
+            }, $choiceNames);
+            $resultString = implode('-', $variations);
+            $stockVariations = json_decode($product->variations, true);
+            foreach ($stockVariations as $variation) {
+                if ($variation['type'] == $resultString) {
+                    $stock = $variation['stock'];
+                    break;
+                }
+            }
+        } catch (\Throwable $th) {
+            info($th->getMessage());
+        }
+
+        return $stock ?? null ;
+    }
     public function addToCart(Request $request)
     {
         $product = Item::find($request->id);
@@ -262,6 +291,18 @@ class POSController extends Controller
         $variations = [];
         $price = 0;
         $addon_price = 0;
+
+
+            $selected_item = $request->all();
+            $stock= $this->get_stocks($product,$selected_item);
+            if($product?->maximum_cart_quantity > 0){
+            if(((isset($stock) && min($stock, $product?->maximum_cart_quantity) < $request->quantity )||  $product?->maximum_cart_quantity <  $request->quantity  ) ){
+                    return response()->json([
+                        'data' => 0
+                    ]);
+                }
+            }
+
 
         //Gets all the choice values of customer choice option and generate a string like Black-S-Cotton
         foreach (json_decode($product->choice_options) as $key => $choice) {
@@ -599,6 +640,8 @@ class POSController extends Controller
         $total_price = $product_price + $total_addon_price - $store_discount_amount - $flash_sale_admin_discount_amount - $flash_sale_vendor_discount_amount;
         $totalDiscount = $store_discount_amount + $flash_sale_admin_discount_amount + $flash_sale_vendor_discount_amount;
         $finalCalculatedTax =  Helpers::getFinalCalculatedTax($order_details, $additionalCharges, $totalDiscount, $total_price, $store->id);
+        $order->flash_admin_discount_amount = round($flash_sale_admin_discount_amount, config('round_up_to_digit'));
+        $order->flash_store_discount_amount = round($flash_sale_vendor_discount_amount, config('round_up_to_digit'));
 
         $tax_amount = $finalCalculatedTax['tax_amount'];
         $tax_status = $finalCalculatedTax['tax_status'];

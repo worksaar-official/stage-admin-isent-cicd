@@ -119,26 +119,6 @@ if (!$is_published) {
         Route::any('verify-payment', [RazorPayController::class, 'verifyPayment'])->name('verify-payment')
             ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
     });
-      
-        // NDASENDA
-    Route::group(['prefix' => 'ndasenda', 'as' => 'ndasenda.'], function () {
-        // shows simple loading/redirect page in webview (same pattern as razor)
-        Route::get('pay', [\App\Http\Controllers\NdasendaController::class, 'index'])->name('pay');
-        // creates redirect session and sends user to Ndasenda Checkout
-        Route::post('redirect', [\App\Http\Controllers\NdasendaController::class, 'redirect'])->name('redirect')
-            ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-
-        // callbacks from Ndasenda
-        Route::post('notify', [\App\Http\Controllers\NdasendaController::class, 'notify'])->name('notify')
-            ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-        Route::any('complete', [\App\Http\Controllers\NdasendaController::class, 'complete'])->name('complete')
-            ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-        Route::any('paid', [\App\Http\Controllers\NdasendaController::class, 'paid'])->name('paid')
-            ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-        Route::any('cancel', [\App\Http\Controllers\NdasendaController::class, 'cancel'])->name('cancel')
-            ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-    });
-
 
         //PAYPAL
         Route::group(['prefix' => 'paypal', 'as' => 'paypal.'], function () {
@@ -259,5 +239,3 @@ Route::get('/image-proxy', function () {
         ->header('Content-Type', $response->header('Content-Type'))
         ->header('Access-Control-Allow-Origin', '*');
 });
-
-Route::get('/track-order/{order_id}', 'HomeController@trackOrder')->name('track-order');

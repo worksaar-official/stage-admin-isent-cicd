@@ -3,7 +3,7 @@
 <div class="__bg-F8F9FC-card count_div view_new_option mb-2">
     <div>
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <label class="form-check form--check">
+            <label class="form-check form--check error-wrapper">
                 <input class="form-check-input" name="options[{{ $key }}][required]" type="checkbox" {{ isset($item['required']) ? ($item['required'] == 'on' ? 'checked	' : '') : '' }}>
                 <span class="form-check-label">{{ translate('Required') }}</span>
             </label>
@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="row g-2">
-            <div class="col-xl-4 col-lg-6">
+            <div class="col-xl-4 col-lg-6 error-wrapper">
                 <label for="">{{ translate('name') }}</label>
                 <input required name="options[{{ $key }}][name]" class="form-control new_option_name"
                     type="text" data-count="{{ $key }}"
@@ -28,7 +28,7 @@
                             class="line--limit-1">{{ translate('messages.selcetion_type') }} </span>
                     </label>
                     <div class="resturant-type-group border">
-                        <label class="form-check form--check mr-2 mr-md-4">
+                        <label class="form-check form--check mr-2 mr-md-4 error-wrapper">
                             <input class="form-check-input show_min_max" type="radio" value="multi"
                                 name="options[{{ $key }}][type]" id="type{{ $key }}"
                                 {{ $item['type'] == 'multi' ? 'checked' : '' }}
@@ -38,7 +38,7 @@
                             </span>
                         </label>
 
-                        <label class="form-check form--check mr-2 mr-md-4">
+                        <label class="form-check form--check mr-2 mr-md-4 error-wrapper">
                             <input class="form-check-input hide_min_max" type="radio" value="single"
                                 {{ $item['type'] == 'single' ? 'checked' : '' }} name="options[{{ $key }}][type]"
                                 id="type{{ $key }}" data-count="{{ $key }}">
@@ -51,13 +51,13 @@
             </div>
             <div class="col-xl-4 col-lg-6">
                 <div class="row g-2">
-                    <div class="col-6">
+                    <div class="col-6 error-wrapper">
                         <label for="">{{ translate('Min') }}</label>
                         <input id="min_max1_{{ $key }}" {{ $item['type'] == 'single' ? 'readonly ' : 'required' }}
                             value="{{ ($item['min'] != 0) ? $item['min']:''  }}" name="options[{{ $key }}][min]"
                             class="form-control" type="number" min="1">
                     </div>
-                    <div class="col-6">
+                    <div class="col-6 error-wrapper">
                         <label for="">{{ translate('Max') }}</label>
                         <input id="min_max2_{{ $key }}" {{ $item['type'] == 'single' ? 'readonly ' : 'required' }}
                             value="{{ ($item['max'] != 0) ? $item['max']:''  }}" name="options[{{ $key }}][max]"
@@ -74,13 +74,13 @@
                 @if (isset($item['values']))
                     @foreach ($item['values'] as $key_value => $value)
                         <div class="row add_new_view_row_class mb-3 position-relative pt-3 pt-md-0">
-                            <div class="col-md-4 col-sm-6">
+                            <div class="col-md-4 col-sm-6 error-wrapper">
                                 <label for="">{{ translate('Option_name') }}</label>
                                 <input class="form-control" required type="text"
                                     name="options[{{ $key }}][values][{{ $key_value }}][label]"
                                     value="{{ $value['label'] }}">
                             </div>
-                            <div class="col-md-4 col-sm-6">
+                            <div class="col-md-4 col-sm-6 error-wrapper">
                                 <label for="">{{ translate('Additional_price') }}</label>
                                 <input class="form-control" required type="number" min="0" step="0.01"
                                     name="options[{{ $key }}][values][{{ $key_value }}][optionPrice]"

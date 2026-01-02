@@ -147,7 +147,7 @@
                         <!-- Search -->
                         <div class="input-group input--group">
                             <input id="datatableSearch" name="search" value="{{ request()?->search ?? null }}" type="search" class="form-control h--40px" placeholder="{{translate('ex_:_search_item_name')}}" aria-label="{{translate('messages.search_here')}}">
-                            <button type="submit" class="btn btn--secondary h--40px"><i class="tio-search"></i></button>
+                            <button type="submit" class="btn btn--primary h--40px"><i class="tio-search"></i></button>
                         </div>
                         <!-- End Search -->
                     </form>
@@ -211,15 +211,16 @@
                         "isShowPaging": false,
                         "paging":false
                     }'>
-                    <thead class="thead-light">
+                    <thead class="bg-table-head">
                     <tr>
-                        <th class="border-0">{{translate('sl')}}</th>
-                        <th class="border-0">{{translate('messages.name')}}</th>
-                        <th class="border-0">{{translate('messages.category')}}</th>
-                        <th class="border-0">{{translate('messages.store')}}</th>
-                        <th class="border-0">{{translate('messages.price')}}</th>
-                        <th class="border-0">{{translate('messages.status')}}</th>
-                        <th class="border-0 text-center">{{translate('messages.action')}}</th>
+                        <th class="text-title border-0">{{translate('sl')}}</th>
+                        <th class="text-title border-0">{{translate('messages.name')}}</th>
+                        <th class="text-title border-0">{{translate('messages.category')}}</th>
+                        <th class="text-title border-0">{{translate('messages.store')}}</th>
+                        <th class="text-title border-0">{{translate('messages.price')}}</th>
+                        <!-- <th class="text-title border-0">{{translate('messages.Vat/Tax')}}</th> -->
+                        <th class="text-title border-0">{{translate('messages.status')}}</th>
+                        <th class="text-title border-0 text-center">{{translate('messages.action')}}</th>
                     </tr>
                     </thead>
 
@@ -256,6 +257,12 @@
                                     {{\App\CentralLogics\Helpers::format_currency($item['price'])}}
                                 </div>
                             </td>
+                            <!-- <td>
+                                <div class="color-677788 fs-12">
+                                    <span>VAT: <strong>(5%)</strong></span> <br>
+                                    <span>GST: <strong>(7%)</strong></span>
+                                </div>
+                            </td> -->
                             <td>
                                 @if ($item->is_rejected == 1)
                                 <span class="badge badge-soft-danger text-capitalize">

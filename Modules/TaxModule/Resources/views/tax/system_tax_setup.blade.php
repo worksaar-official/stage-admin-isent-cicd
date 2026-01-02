@@ -189,7 +189,7 @@
                                                     {{ in_array($systemTaxVat?->tax_type, ['order_wise', 'trip_wise']) ? 'selected' : '' }}
                                                     name="tax_ids[]" id="tax__rate"
                                                     class="form-control js-select2-custom" multiple="multiple"
-                                                    placeholder="Type & Select Tax Rate">
+                                                    placeholder="{{ translate('Type & Select Tax Rate') }}">
                                                     @foreach ($taxVats as $taxVat)
                                                         <option
                                                             {{ in_array($taxVat->id, $systemTaxVat?->tax_ids ?? []) ? 'selected' : '' }}
@@ -345,7 +345,7 @@
                                                         {{ in_array($systemTaxVatForPrescription?->tax_type, ['order_wise', 'trip_wise']) ? 'selected' : '' }}
                                                         name="tax_ids_for_prescription[]" id="tax__rate1"
                                                         class="form-control js-select2-custom" multiple="multiple"
-                                                        placeholder="Type & Select Tax Rate">
+                                                        placeholder="{{ translate('Type & Select Tax Rate') }}">
                                                         @foreach ($taxVats as $taxVat)
                                                             <option
                                                                 {{ in_array($taxVat->id, $systemTaxVatForPrescription?->tax_ids ?? []) ? 'selected' : '' }}
@@ -398,7 +398,7 @@
                                                         <select id="additional_charge_{{ $item }}"
                                                             name="additional[{{ $item }}][]"
                                                             class="form-control js-select2-custom service__charge"
-                                                            multiple="multiple" placeholder="Type & Select Tax Rate">
+                                                            multiple="multiple" placeholder="{{ translate('Type & Select Tax Rate') }}">
                                                             @foreach ($taxVats as $taxVat)
                                                                 <option
                                                                     {{ in_array($taxVat->id, $additionalData?->tax_ids ?? []) ? 'selected' : '' }}

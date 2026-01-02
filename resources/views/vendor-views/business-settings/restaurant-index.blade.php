@@ -22,12 +22,12 @@
             <div class="card-body py-3">
                 <div class="d-flex flex-row justify-content-between align-items-center">
                     <h4 class="card-title align-items-center d-flex">
-                        <img src="{{asset('public/assets/admin/img/store.png')}}" class="w--20 mr-1" alt="">
-                        <span>{{translate('messages.store_temporarily_closed_title')}}</span>
+                        <img src="{{ asset('public/assets/admin/img/store.png') }}" class="w--20 mr-1" alt="">
+                        <span>{{ translate('messages.store_temporarily_closed_title') }}</span>
                     </h4>
                     <label class="switch toggle-switch-lg m-0" for="restaurant-open-status">
-                        <input type="checkbox" id="restaurant-open-status" class="toggle-switch-input restaurant-open-status"
-                            {{$store->active ?'':'checked'}}>
+                        <input type="checkbox" id="restaurant-open-status"
+                            class="toggle-switch-input restaurant-open-status" {{ $store->active ? '' : 'checked' }}>
                         <span class="toggle-switch-label">
                             <span class="toggle-switch-indicator"></span>
                         </span>
@@ -35,43 +35,6 @@
                 </div>
             </div>
         </div>
-
-
-
-
-        {{-- <div class="card mb-3">
-            <div class="card-body py-3">
-                <div class="row">
-                    <div class="col-lg-6">
-                        <div>
-                            <p>{{ translate('To view a list of all active zones on your') }} <a target="_blank"
-                                    href="{{ route('home') }}"
-                                    class="text-underline text--info">{{ translate('Admin Landing') }}</a>
-                                {{ translate('Page, Enable the') }} <span
-                                    class="font-semibold">'{{ translate('Available Zones') }}'</span>
-                                {{ translate('feature') }}</p>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="">
-                            <label  class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control"
-                                for="restaurant-open-status">
-                                <span class="pr-2">{{ translate('messages.Provider_temporarily_closed_title') }}</span>
-                                <label class="switch toggle-switch-lg m-0">
-                                    <input id="restaurant-open-status" type="checkbox" {{ $store->active == 1? 'checked  oo' : 'off' }}
-                                        class="toggle-switch-input restaurant-open-status"
-                                        >
-                                    <span class="toggle-switch-label">
-                                        <span class="toggle-switch-indicator"></span>
-                                    </span>
-                                </label>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-
 
 
         <div class="card mb-3">
@@ -244,38 +207,28 @@
                             </div>
                         @endif
                         @if (config('module.' . $store->module->module_type)['halal'])
-                            <div class="col-xl-4 col-md-4 col-sm-6">
+                            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12">
                                 <div class="">
                                     <label
-                                        class="toggle-switch toggle-switch-sm d-flex justify-content-between border  rounded px-3 form-control"
+                                        class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control"
                                         for="halal_tag_status">
-                                        <span class="pr-2 d-flex">
-                                            <span class="line--limit-1">
-                                                {{ translate('messages.halal_tag_status') }}
-                                            </span>
+                                        <span class="pr-2 text-capitalize">{{ translate('messages.halal_tag_status') }}
+
                                             <span data-toggle="tooltip" data-placement="right"
-                                                data-original-title='{{ translate('If_enabled,_customers_can_see_halal_tag_on_product') }}'
-                                                class="input-label-secondary">
-                                                <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
-                                                    alt="i">
-                                            </span>
+                                                data-original-title="{{ translate('If_enabled,_customers_can_see_halal_tag_on_product') }}"
+                                                class="input-label-secondary"><img
+                                                    src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
+                                                    alt="i"></span>
+
                                         </span>
-                                        <input type="checkbox" data-id="halal_tag_status" data-type="status"
-                                            data-image-on="{{ asset('/public/assets/admin/img/modal/schedule-on.png') }}"
-                                            data-image-off="{{ asset('/public/assets/admin/img/modal/schedule-off.png') }}"
-                                            data-title-on="{{ translate('Want_to_enable_halal_tag_status_for_this_restaurant?') }}"
-                                            data-title-off="{{ translate('Want_to_disable_halal_tag_status_for_this_restaurant?') }}"
-                                            data-text-on="<p>{{ translate('If_enabled,_customers_can_see_halal_tag_on_product') }}"
-                                            data-text-off="<p>{{ translate('If_disabled,_customers_can_not_see_halal_tag_on_product.') }}</p>"
-                                            class="toggle-switch-input dynamic-checkbox" id="halal_tag_status"
-                                            {{ $store->storeConfig?->halal_tag_status == 1 ? 'checked' : '' }}>
+                                        <input type="checkbox" class="toggle-switch-input redirect-url"
+                                            data-url="{{ route('vendor.business-settings.toggle-settings', [$store->id, $store->storeConfig?->halal_tag_status ? 0 : 1, 'halal_tag_status']) }}"
+                                            id="halal_tag_status"
+                                            {{ $store->storeConfig?->halal_tag_status ? 'checked' : '' }}>
                                         <span class="toggle-switch-label">
                                             <span class="toggle-switch-indicator"></span>
                                         </span>
                                     </label>
-                                    <form action="{{ route('vendor.business-settings.toggle-settings', [$store->id, $store->storeConfig?->halal_tag_status ? 0 : 1, 'halal_tag_status']) }}"
-                                        method="get" id="halal_tag_status_form">
-                                    </form>
                                 </div>
                             </div>
                         @endif
@@ -521,18 +474,31 @@
                                                 <label class="input-label"
                                                     for="default_title">{{ translate('messages.meta_title') }}
                                                     ({{ translate('messages.Default') }})
+                                                    <span class="form-label-secondary" data-toggle="tooltip"
+                                                        data-placement="right"
+                                                        data-original-title="{{ translate('This title appears in browser tabs, search results, and link previews.Use a short, clear, and keyword-focused title (recommended: 50–60 characters)') }}">
+                                                        <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
+                                                            alt="">
+                                                    </span>
                                                 </label>
                                                 <input type="text" name="meta_title[]" id="default_title"
-                                                    class="form-control"
+                                                    class="form-control" maxlength="60"
                                                     placeholder="{{ translate('messages.meta_title') }}"
                                                     value="{{ $store->getRawOriginal('meta_title') }}">
                                             </div>
                                             <input type="hidden" name="lang[]" value="default">
-                                            <div class="">
+                                            <div class="mt-2">
                                                 <label class="input-label"
                                                     for="meta_description">{{ translate('messages.meta_description') }}
-                                                    ({{ translate('messages.default') }})</label>
-                                                <textarea type="text" id="meta_description" name="meta_description[]"
+                                                    ({{ translate('messages.default') }})
+                                                    <span class="form-label-secondary" data-toggle="tooltip"
+                                                        data-placement="right"
+                                                        data-original-title="{{ translate('A brief summary that appears under your page title in search results.Keep it compelling and relevant (recommended: 120–160 characters)') }}">
+                                                        <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
+                                                            alt="">
+                                                    </span>
+                                                </label>
+                                                <textarea type="text" maxlength="160" id="meta_description" name="meta_description[]"
                                                     placeholder="{{ translate('messages.meta_description') }}" class="form-control min-h-90px ckeditor">{{ $store->getRawOriginal('meta_description') }}</textarea>
                                             </div>
                                         </div>
@@ -555,18 +521,31 @@
                                                     <label class="input-label"
                                                         for="{{ $lang }}_title">{{ translate('messages.meta_title') }}
                                                         ({{ strtoupper($lang) }})
+                                                        <span class="form-label-secondary" data-toggle="tooltip"
+                                                            data-placement="right"
+                                                            data-original-title="{{ translate('This title appears in browser tabs, search results, and link previews.Use a short, clear, and keyword-focused title (recommended: 50–60 characters)') }}">
+                                                            <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
+                                                                alt="">
+                                                        </span>
                                                     </label>
-                                                    <input type="text" name="meta_title[]"
+                                                    <input type="text" name="meta_title[]" maxlength="60"
                                                         id="{{ $lang }}_title" class="form-control"
                                                         value="{{ $translate[$lang]['meta_title'] ?? '' }}"
                                                         placeholder="{{ translate('messages.meta_title') }}">
                                                 </div>
                                                 <input type="hidden" name="lang[]" value="{{ $lang }}">
-                                                <div class="">
+                                                <div class="mt-2">
                                                     <label class="input-label"
                                                         for="meta_description{{ $lang }}">{{ translate('messages.meta_description') }}
-                                                        ({{ strtoupper($lang) }})</label>
-                                                    <textarea id="meta_description{{ $lang }}" type="text" name="meta_description[]"
+                                                        ({{ strtoupper($lang) }})
+                                                        <span class="form-label-secondary" data-toggle="tooltip"
+                                                            data-placement="right"
+                                                            data-original-title="{{ translate('A brief summary that appears under your page title in search results.Keep it compelling and relevant (recommended: 120–160 characters)') }}">
+                                                            <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
+                                                                alt="">
+                                                        </span>
+                                                    </label>
+                                                    <textarea maxlength="160" id="meta_description{{ $lang }}" type="text" name="meta_description[]"
                                                         placeholder="{{ translate('messages.meta_description') }}" class="form-control min-h-90px ckeditor">{{ $translate[$lang]['meta_description'] ?? '' }}</textarea>
                                                 </div>
                                             </div>
@@ -603,11 +582,17 @@
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="d-flex flex-wrap flex-sm-nowrap __gap-12px">
+                                    <div class="d-flex justify-content-center flex-wrap flex-sm-nowrap __gap-12px">
                                         <label class="__custom-upload-img mr-lg-5">
                                             <label class="form-label">
                                                 {{ translate('meta_image') }} <span
-                                                    class="text--primary">({{ translate('1:1') }})</span>
+                                                    class="text--primary">({{ translate('2:1') }})</span>
+                                                <span class="form-label-secondary" data-toggle="tooltip"
+                                                    data-placement="right"
+                                                    data-original-title="{{ translate('This image is used as a preview thumbnail when the page link is shared on social media or messaging platforms.') }}">
+                                                    <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
+                                                        alt="">
+                                                </span>
                                             </label>
                                             <div class="text-center">
                                                 <img class="img--110 min-height-170px min-width-170px onerror-image"
@@ -620,6 +605,11 @@
                                                 class="custom-file-input"
                                                 accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
                                         </label>
+                                    </div>
+                                    <div class="d-flex justify-content-center">
+                                        <div class="text-center">
+                                            <small>{{ translate('Upload a rectangular image (recommended size: 800×400 px, format: JPG or PNG)') }}</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -655,7 +645,8 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">{{ translate('messages.Create Schedule For ') }}</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">{{ translate('messages.Create Schedule For ') }}
+                        </h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -667,7 +658,8 @@
                             <div class=" ">
                                 <label for="recipient-name"
                                     class="col-form-label">{{ translate('messages.Start time') }}:</label>
-                                <input type="time" id="recipient-name" class="form-control" name="start_time" required>
+                                <input type="time" id="recipient-name" class="form-control" name="start_time"
+                                    required>
                             </div>
                             <div class=" ">
                                 <label for="message-text"
@@ -676,7 +668,8 @@
                             </div>
                             <div class="btn--container mt-4 justify-content-end">
                                 <button type="reset" class="btn btn--reset">{{ translate('messages.reset') }}</button>
-                                <button type="submit" class="btn btn--primary">{{ translate('messages.Submit') }}</button>
+                                <button type="submit"
+                                    class="btn btn--primary">{{ translate('messages.Submit') }}</button>
                             </div>
                         </form>
                     </div>
@@ -691,7 +684,7 @@
 
 @push('script_2')
     <script>
-                "use strict";
+        "use strict";
 
         $(document).on('click', '.restaurant-open-status', function(event) {
 

@@ -39,8 +39,6 @@
                 <th></th>
                 <th></th>
                 <th></th>
-                <th></th>
-                <th></th>
             </tr>
             <tr>
                 <th>{{ translate('messages.sl') }}</th>
@@ -57,9 +55,6 @@
                 <th>{{ translate('messages.coupon_discount') }}</th>
                 <th>{{ translate('messages.discounted_amount') }}</th>
                 <th>{{ translate('messages.tax') }}</th>
-                <th>{{ translate('messages.delivery_charge') }}</th>
-                <th>{{ translate('messages.local_currency_rate') }}</th>
-                <th>{{ translate('messages.local_currency_delivery_fees') }}</th>
                 <th>{{ translate('messages.total_amount') }}</th>
                 <th>{{ translate('messages.payment_status') }}</th>
                 <th>{{ translate('messages.order_status') }}</th>
@@ -95,9 +90,6 @@
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['coupon_discount_amount']) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['coupon_discount_amount'] + $order['store_discount_amount']+ $order['ref_bonus_amount'] ) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['total_tax_amount']) }}</td>
-                <td>{{ \App\CentralLogics\Helpers::number_format_short($order['delivery_charge']) }}</td>
-                <td>{{ $order['local_currency_rate'] ?? 'N/A' }}</td>
-                <td>{{ $order['local_currency_delivery_fees'] ?? 'N/A' }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['order_amount']) }}</td>
                 <td>{{ translate($order->payment_status) }}</td>
                 <td>{{ translate($order->order_status) }}</td>

@@ -517,7 +517,14 @@ document.querySelectorAll('[name="search"]').forEach(function (element) {
     element.addEventListener("input", function (event) {
         if (this.value === "" && window.location.search !== "") {
             let baseUrl = window.location.origin + window.location.pathname;
-            window.location.href = baseUrl;
+            if($(this).data("reload_url")){
+                let reload_url = new URL($(this).data("reload_url"));
+                 reload_url.searchParams.delete("search");
+                window.location.href = reload_url;
+            } else{
+                window.location.href = baseUrl;
+            }
+
         }
     });
 });
@@ -685,9 +692,168 @@ function truncateImageName(filename, maxLength = 15) {
 
 
 
+//Product Gallery Text hide showing
+$('.description-area').each(function () {
+    let contentEl = $(this).find('.description-content');
+    let btn = $(this).find('.description-more');
+
+    let fullText = contentEl.text().trim();
+    let words = fullText.split(" ");
+
+    // Temporarily measure lines
+    let lineHeight = parseFloat(contentEl.css("line-height"));
+    let temp = $('<span/>').css({
+        visibility: 'hidden',
+        position: 'absolute',
+        whiteSpace: 'normal',
+        width: contentEl.width()
+    }).text(fullText).appendTo('body');
+
+    let totalLines = Math.round(temp.height() / lineHeight);
+    temp.remove();
+
+    if (totalLines > 3) {
+        // shrink text until 3 lines
+        let truncated = fullText;
+        while (true) {
+            temp = $('<span/>').css({
+                visibility: 'hidden',
+                position: 'absolute',
+                whiteSpace: 'normal',
+                width: contentEl.width()
+            }).text(truncated).appendTo('body');
+
+            let lines = Math.round(temp.height() / lineHeight);
+            temp.remove();
+
+            if (lines <= 3) break;
+            truncated = truncated.split(" ").slice(0, -1).join(" ");
+        }
+
+        contentEl.data("full", fullText);
+        contentEl.data("truncated", truncated);
+        contentEl.text(truncated + "...");
+        btn.show();
+
+        btn.on("click", function () {
+            if ($(this).text() === "See More") {
+                contentEl.text(contentEl.data("full"));
+                $(this).text("See Less");
+            } else {
+                contentEl.text(contentEl.data("truncated") + "...");
+                $(this).text("See More");
+            }
+        });
+    } else {
+        btn.hide();
+    }
+});
 
 
 
 
+$(document).ready(function () {
+    $(".tags-inner").each(function () {
+        let $container = $(this);
+        let $tags = $container.find(".custom-tag").not(".overflow-count"); // exclude counter span
+        let $counter = $container.find(".overflow-count");
+        let maxVisible = 3;
+
+        if ($tags.length > maxVisible) {
+            // Hide after 3
+            $tags.slice(maxVisible).hide();
+
+            // Count hidden
+            let hiddenCount = $tags.length - maxVisible;
+
+            // Show inside span
+            $counter.text("+" + hiddenCount).show();
+        } else {
+            $counter.hide(); // hide counter if not needed
+        }
+    });
+});
+
+//Image Upload
+$(document).on("change", ".custom__FileEg", function () {
+    let input = this;
+    // Find the nearest img.viewer_img within the same label
+    let $img = $(this).closest("label").find(".viewer_img");
+
+    if (input.files && input.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            $img.attr("src", e.target.result).fadeIn(400);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+});
 
 
+// --- Select2 Counting ---
+$(".js-select2-counting").select2({
+    placeholder: "Select tags",
+    closeOnSelect: false,
+    templateSelection: function (data) {
+        return data.text;
+    }
+    }).on("select2:open select2:close select2:select select2:unselect", function () {
+    setTimeout(updateCounting, 10);
+    });
+    $(window).on("load resize", updateCounting);
+    function updateCounting() {
+    $(".js-select2-counting").each(function () {
+        const $container  = $(this).next(".select2-container");
+        const $rendered   = $container.find(".select2-selection__rendered"); // the <ul>
+        const $choices    = $rendered.children(".select2-selection__choice");
+
+        const availableWidth = $rendered.width();
+        let usedWidth = 0;
+        let hiddenCount = 0;
+
+        // reset
+        $choices.show();
+
+        // hide overflowed tags
+        $choices.each(function () {
+        const $c = $(this);
+        usedWidth += $c.outerWidth(true);
+        if (usedWidth > availableWidth - 30) {
+            $c.hide();
+            hiddenCount++;
+        }
+        });
+
+        // remove old counter next to the UL
+        $rendered.siblings(".select2-counting-btn").remove();
+
+        // insert the counter **outside** the UL, as a sibling
+        if (hiddenCount > 0) {
+        $('<button type="button" class="select2-counting-btn btn btn--primary px-1 py-1">+' + hiddenCount + '</button>')
+            .insertAfter($rendered);
+        }
+    });
+}
+
+        function swalFire(url,title, message, imageUrl,cancelButtonText, confirmButtonText) {
+            Swal.fire({
+                title: title,
+                text: message,
+                imageUrl: imageUrl,
+                imageWidth: 80,
+                imageHeight: 80,
+                imageAlt: 'Custom icon',
+                showCancelButton: true,
+                showCloseButton: true,
+                closeButtonHtml: '×',
+                cancelButtonColor: 'default',
+                confirmButtonColor: 'primary',
+                cancelButtonText:cancelButtonText,
+                confirmButtonText: confirmButtonText,
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    location.href = url;
+                }
+            })
+        }
