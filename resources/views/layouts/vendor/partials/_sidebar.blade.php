@@ -67,8 +67,6 @@
                             </a>
                         </li>
                     @endif
-
-
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('order'))
                         <li class="nav-item">
                             <small class="nav-subtitle"
@@ -798,17 +796,6 @@
                             </a>
                         </li>
                     @endif
-                    <li
-                        class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/whatsapp-message*') ? 'active' : '' }}">
-                        <a class="js-navbar-vertical-aside-menu-link nav-link"
-                            href="{{ route('vendor.whatsapp-message.index') }}"
-                            title="{{ translate('messages.vendor_whatsapp_message') }}">
-                            <i class="tio-chat-outlined nav-icon"></i>
-                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                {{ translate('messages.vendor_whatsapp_message') }}
-                            </span>
-                        </a>
-                    </li>
 
 
 

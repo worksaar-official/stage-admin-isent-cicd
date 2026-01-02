@@ -42,6 +42,10 @@ use App\Contracts\Repositories\ConversationRepositoryInterface;
 use App\Enums\ViewPaths\Admin\DeliveryMan as DeliveryManViewPath;
 use App\Contracts\Repositories\OrderTransactionRepositoryInterface;
 use App\Contracts\Repositories\UserNotificationRepositoryInterface;
+use App\Exports\DeliveryManWithdrawTransactionExport;
+use App\Mail\WithdrawRequestMail;
+use App\Models\DeliveryManWallet;
+use App\Models\WithdrawRequest;
 
 class DeliveryManController extends BaseController
 {
@@ -496,4 +500,194 @@ class DeliveryManController extends BaseController
             return Excel::download(new DisbursementHistoryExport($data), 'Disbursementlist.csv');
         }
     }
+
+    public function status_filter(Request $request){
+        session()->put('withdraw_status_filter',$request['withdraw_status_filter']);
+        return response()->json(session('withdraw_status_filter'));
+    }
+
+
+    public function withdraw_list(Request $request)
+    {
+        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $all = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'all' ? 1 : 0;
+        $active = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'approved' ? 1 : 0;
+        $denied = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'denied' ? 1 : 0;
+        $pending = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'pending' ? 1 : 0;
+
+        $withdraw_req =WithdrawRequest::with(['deliveryman'])
+            ->when($all, function ($query) {
+                return $query;
+            })
+            ->when($active, function ($query) {
+                return $query->where('approved', 1);
+            })
+            ->when($denied, function ($query) {
+                return $query->where('approved', 2);
+            })
+            ->when($pending, function ($query) {
+                return $query->where('approved', 0);
+            })
+            ->when(isset($key), function ($query) use ($key) {
+                return $query->whereHas('deliveryman', function ($query) use ($key) {
+                        foreach ($key as $value) {
+                            $query->where(function ($query) use ($value) {
+                                $query->where('f_name', 'like', "%{$value}%")
+                                    ->orWhere('l_name', 'like', "%{$value}%");
+                            });
+                        }
+                    });
+            })
+            ->where('delivery_man_id', '!=', null)
+            ->latest()
+            ->paginate(config('default_pagination'));
+
+        return view('admin-views.wallet.dm-withdraw', compact('withdraw_req'));
+    }
+    public function withdraw_export(Request $request)
+    {
+        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $all = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'all' ? 1 : 0;
+        $active = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'approved' ? 1 : 0;
+        $denied = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'denied' ? 1 : 0;
+        $pending = session()->has('withdraw_status_filter') && session('withdraw_status_filter') == 'pending' ? 1 : 0;
+
+        $withdraw_req =WithdrawRequest::with(['deliveryman'])
+            ->when($all, function ($query) {
+                return $query;
+            })
+            ->when($active, function ($query) {
+                return $query->where('approved', 1);
+            })
+            ->when($denied, function ($query) {
+                return $query->where('approved', 2);
+            })
+            ->when($pending, function ($query) {
+                return $query->where('approved', 0);
+            })
+            ->when(isset($key), function ($query) use ($key) {
+                return $query->whereHas('deliveryman', function ($query) use ($key) {
+                        foreach ($key as $value) {
+                            $query->where('f_name', 'like', "%{$value}%")
+                                ->orWhere('l_name', 'like', "%{$value}%");
+                        }
+                    });
+            })
+            ->where('delivery_man_id', '!=', null)
+            ->latest()->get();
+
+        $data = [
+            'withdraw_requests'=>$withdraw_req,
+            'search'=>$request->search??null,
+            'request_status'=>session()->has('withdraw_status_filter')?session('withdraw_status_filter'):null,
+
+        ];
+
+        if ($request->type == 'excel') {
+            return Excel::download(new DeliveryManWithdrawTransactionExport($data), 'WithdrawRequests.xlsx');
+        } else if ($request->type == 'csv') {
+            return Excel::download(new DeliveryManWithdrawTransactionExport($data), 'WithdrawRequests.csv');
+        }
+    }
+
+    public function getWithdrawDetails(Request $request)
+    {
+        $withdraw = WithdrawRequest::with(['deliveryman'])->where(['id' => $request->withdraw_id])->first();
+        return response()->json([
+            'view' => view('admin-views.wallet.dm-partials._side_view', compact('withdraw'))->render(),
+        ]);
+    }
+
+    public function withdraw_search(Request $request){
+        $key = explode(' ', $request['search']);
+        $withdraw_req = WithdrawRequest::
+        whereHas('deliveryman', function ($query) use ($key) {
+            foreach ($key as $value) {
+                $query->where('f_name', 'like', "%{$value}%")
+                    ->orWhere('l_name', 'like', "%{$value}%");
+            }
+        })->get();
+        $total=$withdraw_req->count();
+        return response()->json([
+            'view'=>view('admin-views.wallet.dm-partials._table',compact('withdraw_req'))->render(), 'total'=>$total
+        ]);
+    }
+
+    public function withdraw_view($withdraw_id, $seller_id)
+    {
+        $wr = WithdrawRequest::with(['vendor'])->where(['id' => $withdraw_id])->first();
+        return view('admin-views.wallet.withdraw-view', compact('wr'));
+    }
+
+    public function withdrawStatus(Request $request, $id)
+    {
+        $request->validate([
+            'note' => 'max:200',
+        ]);
+        $withdraw = WithdrawRequest::findOrFail($id);
+        $withdraw->approved = $request->approved;
+        $withdraw->transaction_note = $request['note'];
+
+        $wallet = DeliveryManWallet::where('delivery_man_id', $withdraw->delivery_man_id)->first();
+        if ((string) $wallet->total_earning <  (string) ($wallet->total_withdrawn + $wallet->pending_withdraw) ) {
+            Toastr::error(translate('messages.Blalnce_mismatched_total_earning_is_too_low'));
+            return redirect()->route('admin.transactions.delivery-man.withdraw_list');
+        }
+
+        $delivery_man= $withdraw->deliveryman;
+
+        if ($request->approved == 1) {
+            $wallet->increment('total_withdrawn', $withdraw->amount);
+            $wallet->decrement('pending_withdraw', $withdraw->amount);
+            $withdraw->save();
+            $push_notification_status =  Helpers::getNotificationStatusData('deliveryman','deliveryman_withdraw_approve','push_notification_status',$delivery_man->id);
+            $push_notification_status = $push_notification_status == 1 && $delivery_man?->fcm_token && $delivery_man?->fcm_token != '@' ? 1 : 0;
+            $mail_status= ( config('mail.status') &&  Helpers::get_mail_status('withdraw_approve_mail_status_dm') == '1' &&  Helpers::getNotificationStatusData('deliveryman','deliveryman_withdraw_approve','mail_status',$delivery_man->id));
+            $this->sentWithdrawRequestNotification($withdraw,$delivery_man->fcm_token,$delivery_man->email,'approved',$push_notification_status,$mail_status);
+            Toastr::success(translate('messages.deliveryman_withdraw_request_approved'));
+            return redirect()->route('admin.transactions.delivery-man.withdraw_list');
+        } else if ($request->approved == 2) {
+            $wallet->decrement('pending_withdraw', $withdraw->amount);
+            $withdraw->save();
+            $push_notification_status =  Helpers::getNotificationStatusData('deliveryman','deliveryman_withdraw_rejaction','push_notification_status',$delivery_man->id);
+            $push_notification_status = $push_notification_status == 1 && $delivery_man?->fcm_token ? 1 : 0;
+            $mail_status= ( config('mail.status') &&  Helpers::get_mail_status('withdraw_deny_mail_status_dm') == '1' &&  Helpers::getNotificationStatusData('deliveryman','deliveryman_withdraw_rejaction','mail_status',$delivery_man->id));
+            $this->sentWithdrawRequestNotification($withdraw,$delivery_man->fcm_token,$delivery_man->email,'denied',$push_notification_status,$mail_status);
+            Toastr::info(translate('messages.deliveryman_withdraw_request_denied'));
+            return redirect()->route('admin.transactions.delivery-man.withdraw_list');
+        } else {
+            Toastr::error(translate('messages.not_found'));
+            return back();
+        }
+    }
+
+            private function sentWithdrawRequestNotification($withdraw,$token,$email,$type='approved', $push_notification_status = '1', $mail_status = '1'){
+            try {
+                if($push_notification_status == 1){
+                    $data = [
+                        'title' => $type ==  'approved' ?  translate('Withdraw_approved') :translate('Withdraw_rejected'),
+                        'description' =>  $type ==  'approved' ? translate('Withdraw_request_approved_by_admin') :translate('Withdraw_request_rejected_by_admin'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'withdraw',
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'delivery_man_id' => $withdraw->delivery_man_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+
+                if($mail_status ==1){
+                    Mail::to($email)->send( new WithdrawRequestMail($type,$withdraw, 'dm'));
+                }
+            } catch(\Exception $e) {
+                info($e->getMessage());
+            }
+                return true;
+        }
+
 }

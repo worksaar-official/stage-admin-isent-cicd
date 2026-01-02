@@ -37,7 +37,6 @@ $(document).on('change', '.hide_min_max', function () {
 function new_option_name(value, data) {
     $("#new_option_name_" + data).empty();
     $("#new_option_name_" + data).text(value)
-    console.log(value);
 }
 
 function removeOption(e) {

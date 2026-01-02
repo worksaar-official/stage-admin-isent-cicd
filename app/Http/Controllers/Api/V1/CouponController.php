@@ -124,14 +124,14 @@ class CouponController extends Controller
                 default:
                     return response()->json([
                         'errors' => [
-                            ['code' => 'coupon', 'message' => translate('messages.not_found')]
+                            ['code' => 'coupon', 'message' => translate('messages.coupon_not_found')]
                         ]
                     ], 404);
                 }
             } else {
                 return response()->json([
                     'errors' => [
-                        ['code' => 'coupon', 'message' => translate('messages.not_found')]
+                        ['code' => 'coupon', 'message' => translate('Invalid coupon code.')]
                     ]
                 ], 404);
             }

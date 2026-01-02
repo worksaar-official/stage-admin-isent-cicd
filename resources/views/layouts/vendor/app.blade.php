@@ -87,6 +87,16 @@
 @include('layouts.vendor.partials._footer')
 <!-- End Footer -->
 
+    <div class="d-none" id="text-validate-translate"
+        data-required="{{ translate('this_field_is_required') }}"
+        data-something-went-wrong="{{ translate('something_went_wrong!') }}"
+        data-max-limit-crossed="{{ translate('max_limit_crossed') }}"
+        data-file-size-larger="{{ translate('file_size_is_larger') }}"
+        data-passwords-do-not-match="{{ translate('passwords_do_not_match') }}"
+        data-valid-email="{{ translate('please_enter_a_valid_email') }}"
+        data-password-validation="{{ translate('password_must_be_8+_chars_with_upper,_lower,_number_&_symbol') }}"
+    ></div>
+
 
     <div class="modal fade" id="toggle-modal">
         <div class="modal-dialog status-warning-modal">
@@ -230,6 +240,7 @@
 <script src="{{asset('public/assets/admin/js/app-blade/vendor.js')}}"></script>
 {!! Toastr::message() !!}
 <script src="{{asset('public/assets/admin/intltelinput/js/intlTelInput.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/form-validate.js')}}"></script>
 
 @if ($errors->any())
 

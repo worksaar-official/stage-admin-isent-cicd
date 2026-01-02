@@ -125,7 +125,14 @@ class CategoryRepository implements CategoryRepositoryInterface
         return $this->category->where('name', 'like', '%' . $search. '%')
             ->when($request->module_id, function ($query) use ($request) {
                 $query->where('module_id', $request->module_id);
-            })->limit($dataLimit)->get()
+            })
+            ->when($request->position == 1, function ($query) {
+                $query->where('position', 1);
+            })
+            ->when($request->position != null && $request->position == 0, function ($query) {
+                $query->where('position', 0);
+            })
+            ->limit($dataLimit)->get()
             ->map(function ($category) {
                 $data = $category->position == 0 ? translate('messages.main') : translate('messages.sub');
                 return [

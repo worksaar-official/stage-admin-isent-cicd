@@ -34,14 +34,18 @@
             }
         @endphp
             <div class="card mb-3">
-                <!-- Header -->
-                <div class="card-header py-2 border-0">
-                    <h1>{{ translate('search_data') }}</h1>
-                </div>
-                    <div class="row mr-1 ml-2 mb-5">
+                <form action="" method="get">
+                <div class="card-body">
+                    <!-- Header -->
+                    <div class="card-header border-0 px-0 pt-0 pb-xxl-3">
+                        <h1 class="m-0">{{ translate('search_data') }}</h1>
+                    </div>
+                    <div class="row g-lg-3 g-2">
                         <div class="col-sm-6 col-md-3">
                             <div class="select-item">
-                            <select name="store_id" id="store" data-url="{{url()->full()}}" data-placeholder="{{translate('messages.select_store')}}" class="js-data-example-ajax form-control store-filter" required title="Select Store" oninvalid="this.setCustomValidity('{{translate('messages.please_select_store')}}')">
+                            <select name="store_id" id="store"
+                            data-url="{{route("admin.store.get-stores")}}"
+                            data-placeholder="{{translate('messages.select_store')}}" class="js-data-example-ajax form-control" required title="Select Store" >
                                 @if($store)
                                 <option value="{{$store->id}}" selected>{{$store->name}}</option>
                                 @else
@@ -53,8 +57,7 @@
                         <div class="col-sm-6 col-md-3">
                             @if(!isset(auth('admin')->user()->zone_id))
                             <div class="select-item">
-                                <select name="zone_id" class="form-control js-select2-custom set-filter"
-                                        data-url="{{url()->full()}}" data-filter="zone_id">
+                                <select name="zone_id" class="form-control js-select2-custom">
                                     <option value="" {{!request('zone_id')?'selected':''}}>{{ translate('messages.All_Zones') }}</option>
                                     @foreach(\App\Models\Zone::orderBy('name')->get(['id','name']) as $z)
                                         <option
@@ -66,13 +69,10 @@
                             </div>
                             @endif
                         </div>
-
                         <div class="col-sm-6 col-md-{{ $pharmacy == 1 ? '2':'3' }}">
                             <div class="select-item">
 
-                                <select name="category_id" id="category_id" data-placeholder="{{ translate('messages.select_category') }}"
-                                    class="js-data-example-ajax form-control set-filter" id="category_id"
-                                    data-url="{{url()->full()}}" data-filter="category_id">
+                                <select name="category_id" id="category_id" data-placeholder="{{ translate('messages.select_category') }}" data-url="{{route("admin.category.get-all")}}" class="js-data-example-ajax form-control"  >
                                     @if($category)
                                     <option value="{{$category->id}}" selected>{{$category->name}}</option>
                                     @else
@@ -83,30 +83,24 @@
                         </div>
                         <div class="col-sm-6 col-md-{{ $pharmacy == 1 ? '2':'3' }}">
                             <div class="select-item">
-                                <select name="sub_category_id" class="form-control js-select2-custom set-filter" data-placeholder="{{ translate('messages.select_sub_category') }}" id="sub-categories" data-url="{{url()->full()}}" data-filter="sub_category_id">
-                                   @if (count($sub_categories) == 0 && $category )
-                                    <option selected>{{translate('messages.No_Subcategory')}}</option>
-
+                                <select name="sub_category_id" class="form-control js-data-example-ajax "
+                                data-url="{{ route('admin.item.get-categories') }}"
+                                data-placeholder="{{ translate('messages.select_sub_category') }}" id="sub-categories">
+                                    @if($sub_category)
+                                    <option value="{{$sub_category->id}}" selected>{{$sub_category->name}}</option>
                                     @else
                                     <option value="all" selected>{{translate('messages.all_sub_category')}}</option>
+                                    @endif
 
-                                   @endif
-
-                                    @foreach($sub_categories as $z)
-                                    <option
-                                        value="{{$z['id']}}" {{ request()?->sub_category_id == $z['id']?'selected':''}}>
-                                        {{$z['name']}}
-                                    </option>
-                                @endforeach
                                 </select>
                             </div>
                         </div>
                         @if ($pharmacy == 1)
                             <div class="col-sm-6 col-md-2">
                                 <div class="select-item">
-                                <select name="condition_id" id="condition_id" class="form-control set-filter"
-                                    data-placeholder="{{ translate('messages.Select_Condition') }}"
-                                    data-url="{{url()->full()}}" data-filter="condition_id">
+                                <select name="condition_id" id="condition_id" class="form-control"
+                                    data-url="{{ route('admin.common-condition.get-all') }}"
+                                    data-placeholder="{{ translate('messages.Select_Condition') }}">
                                     @if($condition)
                                     <option value="{{$condition->id}}" selected>{{$condition->name}}</option>
                                     @else
@@ -116,9 +110,13 @@
                                 </div>
                             </div>
                         @endif
-
                     </div>
-
+                    <div class="btn--container justify-content-end mt-xl-4 mt-3">
+                        <button type="reset" data-url="{{ url()->current() }}" class="btn btn--reset redirect-url">{{ translate('messages.reset') }}</button>
+                        <button type="submit" class="btn btn--primary">{{ translate('messages.Filter') }}</button>
+                    </div>
+                </div>
+                </form>
             </div>
 
         <div class="card">
@@ -130,7 +128,7 @@
                         <!-- Search -->
                         <div class="input-group input--group">
                             <input id="datatableSearch" name="search" value="{{ request()?->search ?? null }}" type="search" class="form-control h--40px" placeholder="{{translate('ex_:_search_item_by_name')}}" aria-label="{{translate('messages.search_here')}}">
-                            <button type="submit" class="btn btn--secondary h--40px"><i class="tio-search"></i></button>
+                            <button type="submit" class="btn btn--primary h--40px"><i class="tio-search"></i></button>
                         </div>
                         <!-- End Search -->
                     </form>
@@ -203,23 +201,23 @@
                         "isShowPaging": false,
                         "paging":false
                     }'>
-                    <thead class="thead-light">
+                    <thead class="bg-table-head">
                     <tr>
-                        <th class="border-0">{{translate('sl')}}</th>
-                        <th class="border-0">{{translate('messages.name')}}</th>
-                        <th class="border-0">{{translate('messages.category')}}</th>
+                        <th class="text-title border-0">{{translate('sl')}}</th>
+                        <th class="text-title border-0">{{translate('messages.name')}}</th>
+                        <th class="text-title border-0">{{translate('messages.category')}}</th>
                         @if (Config::get('module.current_module_type') != 'food')
-                        <th class="border-0">{{translate('messages.quantity')}}</th>
+                        <th class="text-title border-0">{{translate('messages.quantity')}}</th>
                         @endif
-                        <th class="border-0">{{translate('messages.store')}}</th>
-                        <th class="border-0 text-center">{{translate('messages.price')}}</th>
+                        <th class="text-title border-0">{{translate('messages.store')}}</th>
+                        <th class="text-title border-0 text-center">{{translate('messages.price')}}</th>
 
                         @if ($productWiseTax)
-                        <th  class="border-0 ">{{ translate('messages.Vat/Tax') }}</th>
+                        <th class="text-title border-0 ">{{ translate('messages.Vat/Tax') }}</th>
                         @endif
 
-                        <th class="border-0 text-center">{{translate('messages.status')}}</th>
-                        <th class="border-0 text-center">{{translate('messages.action')}}</th>
+                        <th class="text-title border-0 text-center">{{translate('messages.status')}}</th>
+                        <th class="text-title border-0 text-center">{{translate('messages.action')}}</th>
                     </tr>
                     </thead>
 
@@ -351,87 +349,33 @@
         </div>
     </div>
 
+   <input type="hidden" id="current_module_id" value="{{Config::get('module.current_module_id')}}">
 @endsection
 
 @push('script_2')
     <script>
         "use strict";
         $(document).on('ready', function () {
-            // INITIALIZATION OF DATATABLES
-            // =======================================================
-        let datatable = $.HSCore.components.HSDatatables.init($('#datatable'), {
-          select: {
-            style: 'multi',
-            classMap: {
-              checkAll: '#datatableCheckAll',
-              counter: '#datatableCounter',
-              counterInfo: '#datatableCounterInfo'
-            }
-          },
-          language: {
-            zeroRecords: '<div class="text-center p-4">' +
-                '<img class="w-7rem mb-3" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">' +
-
-                '</div>'
-          }
-        });
-
-        $('#datatableSearch').on('mouseup', function (e) {
-          let $input = $(this),
-            oldValue = $input.val();
-
-          if (oldValue == "") return;
-
-          setTimeout(function(){
-            let newValue = $input.val();
-
-            if (newValue == ""){
-              // Gotcha
-              datatable.search('').draw();
-            }
-          }, 1);
-        });
-
-        $('#toggleColumn_index').change(function (e) {
-          datatable.columns(0).visible(e.target.checked)
-        })
-        $('#toggleColumn_name').change(function (e) {
-          datatable.columns(1).visible(e.target.checked)
-        })
-
-        $('#toggleColumn_type').change(function (e) {
-          datatable.columns(2).visible(e.target.checked)
-        })
-
-        $('#toggleColumn_vendor').change(function (e) {
-          datatable.columns(3).visible(e.target.checked)
-        })
-
-        $('#toggleColumn_status').change(function (e) {
-          datatable.columns(5).visible(e.target.checked)
-        })
-        $('#toggleColumn_price').change(function (e) {
-          datatable.columns(4).visible(e.target.checked)
-        })
-        $('#toggleColumn_action').change(function (e) {
-          datatable.columns(6).visible(e.target.checked)
-        })
-
-            // INITIALIZATION OF SELECT2
-            // =======================================================
-            $('.js-select2-custom').each(function () {
-                let select2 = $.HSCore.components.HSSelect2.init($(this));
+            let datatable = $.HSCore.components.HSDatatables.init($('#datatable'), {
+            select: {
+                style: 'multi',
+                classMap: {
+                checkAll: '#datatableCheckAll',
+                counter: '#datatableCounter',
+                counterInfo: '#datatableCounterInfo'
+                }
+            },
             });
         });
 
         $('#store').select2({
             ajax: {
-                url: '{{url('/')}}/admin/store/get-stores',
+                url: $('#store').data('url'),
                 data: function (params) {
                     return {
                         q: params.term, // search term
                         all:true,
-                        module_id:{{Config::get('module.current_module_id')}},
+                        module_id:$('#current_module_id').val(),
                         page: params.page
                     };
                 },
@@ -453,12 +397,13 @@
 
         $('#category_id').select2({
             ajax: {
-                url: '{{route("admin.category.get-all")}}',
+                url: $('#category_id').data('url'),
                 data: function (params) {
                     return {
-                        q: params.term, // search term
+                        q: params.term,
                         all:true,
-                        module_id:{{Config::get('module.current_module_id')}},
+                        module_id:$('#current_module_id').val(),
+                        position:0,
                         page: params.page
                     };
                 },
@@ -469,6 +414,37 @@
                 },
                 __port: function (params, success, failure) {
                     let $request = $.ajax(params);
+                    $request.then(success);
+                    $request.fail(failure);
+                    return $request;
+                }
+            }
+
+        });
+
+        $('#category_id').on('change', function (e) {
+            $('#sub-categories').val(null).trigger('change');
+        })
+
+        $('#sub-categories').select2({
+            ajax: {
+                url: $('#sub-categories').data('url'),
+                data: function(params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page,
+                        module_id: $('#current_module_id').val(),
+                        parent_id: $('#category_id').val(),
+                        sub_category: true
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data
+                    };
+                },
+                __port: function(params, success, failure) {
+                    let $request = $.ajax(params);
 
                     $request.then(success);
                     $request.fail(failure);
@@ -478,10 +454,9 @@
             }
         });
 
-
         $('#condition_id').select2({
             ajax: {
-                url: '{{ url('/') }}/admin/common-condition/get-all',
+                url: $('#condition_id').data('url'),
                 data: function(params) {
                     return {
                         q: params.term, // search term
@@ -506,19 +481,19 @@
         });
 
         $('.update-quantity').on('click', function (){
-        let val = $(this).data('id');
-        $.get({
-            url: '{{ route('admin.item.get_stock') }}',
-            data: { id: val },
-            dataType: 'json',
-            success: function (data) {
-                $('.rest-part').empty().html(data.view);
-                update_qty();
-            },
-        });
-    })
+            let val = $(this).data('id');
+            $.get({
+                url: '{{ route('admin.item.get_stock') }}',
+                data: { id: val },
+                dataType: 'json',
+                success: function (data) {
+                    $('.rest-part').empty().html(data.view);
+                    update_qty();
+                },
+            });
+        })
 
-    function update_qty() {
+        function update_qty() {
             let total_qty = 0;
             let qty_elements = $('input[name^="stock_"]');
             for (let i = 0; i < qty_elements.length; i++) {
@@ -534,6 +509,8 @@
                 $('input[name="current_stock"]').attr("readonly", false);
             }
         }
+
+
 
     </script>
 @endpush

@@ -44,6 +44,20 @@ class UnitRepository implements UnitRepositoryInterface
             }
         })->paginate($dataLimit);
     }
+    public function getExportList($request): Collection
+    {
+        $key = explode(' ', $request['search']);
+        return $this->unit
+        ->when(isset($key) , function($q) use($key){
+                $q->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                       $q->orWhere('unit', 'like', "%{$value}%");
+                    }
+                });
+            })
+
+        ->get();
+    }
 
     public function update(string $id, array $data): bool|string|object
     {

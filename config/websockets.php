@@ -1,8 +1,6 @@
 <?php
 
 use BeyondCode\LaravelWebSockets\Dashboard\Http\Middleware\Authorize;
-use App\WebSockets\Handler\DMLocationSocketHandler;
-use App\WebSockets\Handler\OrderTrackingSocketHandler;
 
 return [
 
@@ -33,10 +31,6 @@ return [
             'capacity' => null,
             'enable_client_messages' => false,
             'enable_statistics' => true,
-            'handlers' => [
-                'dm-location' => DMLocationSocketHandler::class,
-                'order-tracking' => OrderTrackingSocketHandler::class,
-            ],
         ],
     ],
 

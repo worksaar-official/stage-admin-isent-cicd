@@ -54,9 +54,9 @@ class CategoryController extends BaseController
     {
         $categories = $this->categoryRepo->getListWhere(
             searchValue: $request['search'],
-            filters: ['position' => $request['position']],
+            filters: ['position' => $request['position']??0],
             relations: ['module'],
-            dataLimit: config('default_pagination')
+            dataLimit:  config('default_pagination')
         );
 
         $mainCategories = $this->categoryRepo->getMainList(
@@ -69,7 +69,7 @@ class CategoryController extends BaseController
         $categoryWiseTax = $taxData['categoryWiseTax'];
         $taxVats = $taxData['taxVats'];
 
-        return view($this->categoryService->getViewByPosition($request['position']), compact('categories','language','mainCategories','categoryWiseTax','taxVats'));
+        return view($this->categoryService->getViewByPosition($request['position']??0), compact('categories','language','mainCategories','categoryWiseTax','taxVats'));
     }
 
     public function add(CategoryAddRequest $request): RedirectResponse
@@ -105,7 +105,7 @@ class CategoryController extends BaseController
         return back();
     }
 
-    public function getUpdateView(string|int $id): View
+    public function getUpdateView(string|int $id): JsonResponse
     {
         $category = $this->categoryRepo->getFirstWithoutGlobalScopeWhere(params: ['id' => $id]);
         $language = getWebConfig('language');
@@ -114,8 +114,9 @@ class CategoryController extends BaseController
         $categoryWiseTax = $taxData['categoryWiseTax'];
         $taxVats = $taxData['taxVats'];
         $taxVatIds = $categoryWiseTax ? $category->taxVats()->pluck('tax_id')->toArray(): [];
-
-        return view(CategoryViewPath::UPDATE['view'], compact('category','language','categoryWiseTax','taxVats','taxVatIds'));
+        return response()->json([
+            'view' => view('admin-views.category._edit', compact('category', 'taxVats', 'categoryWiseTax', 'language', 'taxVatIds'))->render(),
+        ]);
     }
 
     public function updateStatus(Request $request): RedirectResponse
@@ -182,7 +183,7 @@ class CategoryController extends BaseController
     public function getNameList(Request $request): JsonResponse
     {
         $data = $this->categoryRepo->getNameList(request: $request, dataLimit: 8);
-        $data[] = (object)['id' => 'all', 'text' => 'All'];
+        $data[] = (object)['id' => 'all', 'text' => translate('messages.all')];
         return response()->json($data);
     }
 

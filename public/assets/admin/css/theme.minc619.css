@@ -697,10 +697,15 @@
     background-color: #71869d;
 }
 
-.icon-success {
+/* .icon-success {
     color: #fff;
     border-color: #00c9a7;
     background-color: #00c9a7;
+} */
+.icon-success {
+    color: #fff;
+    border-color: #039D55;
+    background-color: #039D55;
 }
 
 .icon-info {
@@ -709,10 +714,16 @@
     background-color: #00c9db;
 }
 
-.icon-warning {
+/* .icon-warning {
     color: #1e2022;
     border-color: #f5ca99;
     background-color: #f5ca99;
+} */
+
+.icon-warning {
+    color: #1e2022;
+    border-color: #FFBB38;
+    background-color: #FFBB38;
 }
 
 .icon-danger {
@@ -1127,7 +1138,15 @@
 .page-link {
     cursor: pointer;
     text-align: center;
-    min-width: 2.25rem;
+    min-width: 1.9rem;
+    width: 1.9rem;
+    height: 1.9rem;
+    background-color: #F4F5F7;
+    color: #8992A9;
+    padding: 5px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .page-item:not(.active) .page-link:hover {
@@ -6133,4 +6152,12 @@ div.scroll-down {
     align-items: center;
     padding: 4px 10px;
     min-height: 42px;
+}
+
+.custom-offcanvas{
+    overflow-y: hidden;
+}
+.custom-offcanvas-body{
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
 }
