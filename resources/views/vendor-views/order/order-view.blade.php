@@ -55,6 +55,7 @@
                             <div>
                                 <h1 class="page-header-title">
                                     {{ translate('messages.order') }} #{{ $order['id'] }}
+
                                     @if ($order->edited)
                                         <span class="badge badge-soft-danger ml-sm-3">
                                             {{ translate('messages.edited') }}
@@ -78,20 +79,8 @@
                                     {{ $order['cancellation_reason'] }}
                                 </h6>
                                 @endif
-
-                                <!-- New Note Start -->
-                                <div class="__bg-FAFAFA fs-12 rounded p-10px mt-2 mb-3">
-                                    <strong class="text-title">Delivery instruction :</strong>  Parcel contain fragile product so take care of this.
-                                </div>
-                                <!-- New Note -->
-                                @if ($order['bring_change_amount'] > 0)
-                                <div class="info-notes-bg px-3 color-222324CC py-2 rounded fs-12  gap-2 mt-2">
-                                    {{ translate('Please_bring') }} <strong class="text-title">${{ $order['bring_change_amount'] }}</strong> {{ translate('in_change_when_making_the_delivery') }}.
-                                </div>
-                                @endif
-                                <!-- New Note End -->
                                 @if ($order['unavailable_item_note'])
-                                    <h6 class="w-100 badge-soft-warning p-1 rounded mt-2">
+                                    <h6 class="w-100 badge-soft-warning">
                                         <span class="text-dark">
                                             {{ translate('messages.order_unavailable_item_note') }} :
                                         </span>
@@ -99,7 +88,7 @@
                                     </h6>
                                 @endif
                                 @if ($order['delivery_instruction'])
-                                    <h6 class="w-100 badge-soft-warning p-1 rounded mt-2">
+                                    <h6 class="w-100 badge-soft-warning">
                                         <span class="text-dark">
                                             {{ translate('messages.order_delivery_instruction') }} :
                                         </span>
@@ -370,20 +359,14 @@
                                                                     @endif
                                                                 @else
                                                                     @if (count(json_decode($detail['variation'], true)) > 0)
-                                                                        <strong><u>{{ translate('messages.variation') }}
-                                                                                :
+                                                                        <strong><u>{{ translate('messages.variation') }} :
                                                                             </u></strong>
-                                                                    <?php
-                                                                        $detailsVariation = isset(json_decode($detail['variation'], true)[0]) ? json_decode($detail['variation'], true)[0] : json_decode($detail['variation'], true);
-                                                                    ?>
-                                                                        @foreach ($detailsVariation as $key1 => $variation)
+                                                                        @foreach (json_decode($detail['variation'], true)[0] as $key1 => $variation)
                                                                             @if ($key1 != 'stock' || ($order->store && config('module.' . $order->store->module->module_type)['stock']))
                                                                                 <div class="font-size-sm text-body">
-                                                                                        <span>{{ $key1 }} :
-                                                                                        </span>
-                                                                                    <span class="font-weight-bold">
-                                                                                        {{ Str::limit(implode(', ', (array) $variation), 15, '...') }}
-                                                                                    </span>
+                                                                                    <span>{{ $key1 }} : </span>
+                                                                                    <span
+                                                                                        class="font-weight-bold">{{ Str::limit($variation, 20, '...') }}</span>
                                                                                 </div>
                                                                             @endif
                                                                         @endforeach

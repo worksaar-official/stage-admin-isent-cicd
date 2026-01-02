@@ -143,6 +143,9 @@ class Store extends Model
         'tin',
         'tin_expire_date',
         'tin_certificate_image',
+		'store_code',
+        'webhook_url',
+        'api_key',
     ];
 
     /**

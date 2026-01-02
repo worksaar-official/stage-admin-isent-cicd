@@ -32,17 +32,17 @@ class StoreOrderlistExport implements  FromView, ShouldAutoSize, WithStyles ,Wit
 
 
     public function styles(Worksheet $sheet) {
-        $sheet->getStyle('A2:O2')->getFont()->setBold(true);
+        $sheet->getStyle('A2:R2')->getFont()->setBold(true);
 
-        $sheet->getStyle('A4:O4')->getFont()->setBold(true)->getColor()
+        $sheet->getStyle('A4:R4')->getFont()->setBold(true)->getColor()
         ->setARGB('FFFFFF');
-        $sheet->getStyle('A4:O4')->getFill()->applyFromArray([
+        $sheet->getStyle('A4:R4')->getFill()->applyFromArray([
             'fillType' => 'solid',
             'rotation' => 0,
             'color' => ['rgb' => '005D5F'],
         ]);
 
-        $sheet->getStyle('M5:N'.$this->data['data']->count() +4)->getFill()->applyFromArray([
+        $sheet->getStyle('P5:R'.$this->data['data']->count() +4)->getFill()->applyFromArray([
             'fillType' => 'solid',
             'rotation' => 0,
             'color' => ['rgb' => 'FFE599'],
@@ -59,10 +59,10 @@ class StoreOrderlistExport implements  FromView, ShouldAutoSize, WithStyles ,Wit
             'fillType' => 'solid',
             'rotation' => 0,
         ];
-        $sheet->getStyle('A1:O1')->applyFromArray($styleArray);
+        $sheet->getStyle('A1:R1')->applyFromArray($styleArray);
         return [
             // Define the style for cells with data
-            'A1:O'.$this->data['data']->count() +4 => [
+            'A1:R'.$this->data['data']->count() +4 => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -78,7 +78,7 @@ class StoreOrderlistExport implements  FromView, ShouldAutoSize, WithStyles ,Wit
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $event->sheet->getStyle('A1:O1') // Adjust the range as per your needs
+                $event->sheet->getStyle('A1:R1') // Adjust the range as per your needs
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
@@ -91,19 +91,19 @@ class StoreOrderlistExport implements  FromView, ShouldAutoSize, WithStyles ,Wit
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
-                $event->sheet->getStyle('A3:O'.$this->data['data']->count() +4)
+                $event->sheet->getStyle('A3:R'.$this->data['data']->count() +4)
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
-                $event->sheet->getStyle('C2:O2')
+                $event->sheet->getStyle('C2:R2')
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
 
-                    $event->sheet->mergeCells('A1:O1');
+                    $event->sheet->mergeCells('A1:R1');
                     $event->sheet->mergeCells('A2:B3');
-                    $event->sheet->mergeCells('C2:O2');
+                    $event->sheet->mergeCells('C2:R2');
 
 
                     $event->sheet->getDefaultRowDimension()->setRowHeight(30);
@@ -119,4 +119,3 @@ class StoreOrderlistExport implements  FromView, ShouldAutoSize, WithStyles ,Wit
         ];
     }
 }
-

@@ -258,6 +258,7 @@
                         @if ($status == 'scheduled')
                         <th class="border-0">{{translate('messages.scheduled_at')}}</th>
                         @endif
+                        <th class="border-0">{{translate('messages.order_source')}}</th>
                         <th class="border-0">{{translate('messages.customer_information')}}</th>
                         @if ($parcel_order)
                             <th class="border-0">{{translate('messages.parcel_category')}}</th>
@@ -308,6 +309,17 @@
                                 </div>
                             </td>
                             @endif
+                            <td>
+                                @if($order->order_source == 'api')
+                                    <span class="badge badge-soft-primary">API</span>
+                                @elseif($order->order_source == 'isent_pos')
+                                    <span class="badge badge-soft-info">Isent Web</span>
+                                @elseif($order->order_source == 'isent_app')
+                                    <span class="badge badge-soft-info">Isent App</span>
+                                @else
+                                    <span class="badge badge-soft-success">Default</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($order->is_guest)
                                     @php($customer_details = json_decode($order['delivery_address'],true))

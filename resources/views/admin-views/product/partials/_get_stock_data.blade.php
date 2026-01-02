@@ -16,7 +16,7 @@
 </div>
 
 <input name="product_id" value="{{$product->id}}" type="hidden" class="initial-hidden">
-<div id="quantity" class="form-group error-wrapper">
+<div id="quantity" class="form-group">
     <label for="total_qty" class="input-label" >
         {{translate('Total_Quantity')}}
     </label>
@@ -44,14 +44,14 @@
 
 
                     </td>
-                    <td class="error-wrapper">
+                    <td>
                         <input value="{{ $combination['type'] }}" name="type[]" type="hidden">
                         <input type="number" name="price_{{ $key  }}_{{ $combination['type'] }}"
                         value="{{$combination['price'] ?? 0}}" min="0"
                         step="0.01"
                         class="form-control" >
                     </td>
-                    <td class="w-200 error-wrapper">
+                    <td class="w-200">
                         <input type="number" name="stock_{{ $key  }}_{{ $combination['type'] }}"
                             value="{{ $combination['stock'] ?? 0 }}" min="1" max="999999999" class="form-control update_qty"
                             required>

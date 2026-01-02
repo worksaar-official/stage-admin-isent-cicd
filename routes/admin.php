@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\DeliveryMan\DeliveryManController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -11,14 +10,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             // return view('admin-views.test.VendorPanel-tax-report');
             // return view('admin-views.test.surgeprice-setup.list');
             // return view('admin-views.test.surgeprice-setup.emty');
-            // return view('admin-views.test.surgeprice-setup.daily-schedule');
-            // return view('admin-views.test.components');
-
-            // version-3.4
-            return view('admin-views.test.marketing-tools');
-            return view('admin-views.test.parcel-cancellation-setup');
-            // return view('admin-views.test.deliveryman-withdraw-transaction');
-
+            return view('admin-views.test.surgeprice-setup.daily-schedule');
         });
         Route::get('get-all-stores', 'VendorController@get_all_stores')->name('get_all_stores');
         Route::get('lang/{locale}', 'LanguageController@lang')->name('lang');
@@ -47,18 +39,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('/instruction/{id}/{status}', 'ParcelController@instruction_status')->name('instruction_status');
             Route::put('instruction_edit/', 'ParcelController@instruction_edit')->name('instruction_edit');
             Route::delete('instruction_delete/{id}', 'ParcelController@instruction_delete')->name('instruction_delete');
-
-            Route::get('cancellation-settings', 'ParcelController@cancellationSettings')->name('cancellationSettings');
-            Route::get('cancellation-settings-status', 'ParcelController@cancellationSettingsStatus')->name('cancellationSettingsStatus');
-            Route::put('cancellation-settings-update', 'ParcelController@cancellationSettingsUpdate')->name('cancellationSettingsUpdate');
-            Route::post('cancellation-reason', 'ParcelController@cancellationReason')->name('cancellationReason');
-            Route::get('cancellation-reason-status/{reason}', 'ParcelController@cancellationReasonStatus')->name('cancellationReasonStatus');
-            Route::get('cancellation-reason-edit/{reason}', 'ParcelController@cancellationReasonEdit')->name('cancellationReasonEdit');
-            Route::put('cancellation-reason-update/{reason}', 'ParcelController@cancellationReasonUpdate')->name('cancellationReasonUpdate');
-            Route::delete('cancellation-reason-delete/{reason}', 'ParcelController@cancellationReasonDelete')->name('cancellationReasonDelete');
-            Route::get('cancellation-reason-export', 'ParcelController@cancellationReasonExport')->name('cancellationReasonExport');
         });
-
 
         Route::group(['prefix' => 'dashboard-stats', 'as' => 'dashboard-stats.'], function () {
             Route::post('order', 'DashboardController@order')->name('order');
@@ -291,10 +272,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('export-orders/{file_type}/{status}/{type}', 'OrderController@export_orders')->name('export');
 
             Route::get('offline/payment/list/{status}', 'OrderController@offline_verification_list')->name('offline_verification_list');
-            Route::get('parcel-cancelation-reasons', 'OrderController@parcelCancellationReason')->name('parcelCancellationReason');
-            Route::put('cancel-parcel', 'OrderController@CancelParcel')->name('CancelParcel');
-            Route::put('parcel-refund', 'OrderController@parcelRefund')->name('parcelRefund');
-            Route::get('parcel-return', 'OrderController@parcelReturn')->name('parcelReturn');
 
         });
         // Refund
@@ -361,20 +338,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('landing-page-settings/{tab?}', 'BusinessSettingsController@landing_page_settings')->name('landing-page-settings');
             Route::POST('landing-page-settings/{tab}', 'BusinessSettingsController@update_landing_page_settings')->name('landing-page-settings');
             Route::DELETE('landing-page-settings/{tab}/{key}', 'BusinessSettingsController@delete_landing_page_settings')->name('landing-page-settings-delete');
-
-            Route::group(['prefix' => 'marketing' , 'as' => 'marketing.'], function () {
-                    Route::get('analytic-setup', 'Marketing\AnalyticScriptController@analyticSetup')->name('analytic');
-                    Route::post('analytic-setup-update', 'Marketing\AnalyticScriptController@analyticUpdate')->name('analyticUpdate');
-                    Route::get('analytic-status', 'Marketing\AnalyticScriptController@analyticStatus')->name('analyticStatus');
-            });
-
-           //openAI
-            Route::get('open-ai', 'BusinessSettingsController@openAI')->name('openAI');
-            Route::get('open-ai-settings', 'BusinessSettingsController@openAISettings')->name('openAISettings');
-            Route::put('open-ai-settings-update', 'BusinessSettingsController@openAISettingsUpdate')->name('openAISettingsUpdate');
-            Route::get('open-ai-config-status', 'BusinessSettingsController@openAIConfigStatus')->name('openAIConfigStatus');
-            Route::post('openai-update', 'BusinessSettingsController@openAIConfigUpdate')->name('openAIConfigUpdate');
-
 
             // Centerlize login
             Route::group(['prefix' => 'login-settings', 'as' => 'login-settings.'], function () {
@@ -489,6 +452,10 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('/offline-payment/update', 'OfflinePaymentMethodController@update')->name('offline.update');
             Route::post('/offline-payment/delete', 'OfflinePaymentMethodController@delete')->name('offline.delete');
             Route::get('/offline-payment/status/{id}', 'OfflinePaymentMethodController@status')->name('offline.status');
+
+            // Whatsapp
+            Route::get('whatsapp', 'BusinessSettingsController@whatsapp')->name('whatsapp');
+            Route::post('whatsapp/update', 'BusinessSettingsController@whatsapp_update')->name('whatsapp-update');
 
 
 
@@ -793,17 +760,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::get('withdraw_export', 'VendorController@withdraw_export')->name('withdraw_export');
                 Route::get('withdraw-view/{withdraw_id}/{seller_id}', 'VendorController@withdraw_view')->name('withdraw_view');
                 Route::get('get-Withdraw-Details', 'VendorController@getWithdrawDetails')->name('getWithdrawDetails');
-
-            });
-
-            Route::group(['prefix' => 'delivery-man', 'as' => 'delivery-man.'], function () {
-                Route::post('status-filter', [DeliveryManController::class, 'status_filter'])->name('status-filter');
-                Route::post('withdraw-status/{id}', [DeliveryManController::class, 'withdrawStatus'])->name('withdraw_status');
-                Route::get('withdraw_list', [DeliveryManController::class, 'withdraw_list'])->name('withdraw_list');
-                Route::post('withdraw_search', [DeliveryManController::class, 'withdraw_search'])->name('withdraw_search');
-                Route::get('withdraw_export', [DeliveryManController::class, 'withdraw_export'])->name('withdraw_export');
-                Route::get('withdraw-view/{withdraw_id}/{seller_id}', [DeliveryManController::class, 'withdraw_view'])->name('withdraw_view');
-                Route::get('get-Withdraw-Details', [DeliveryManController::class, 'getWithdrawDetails'])->name('getWithdrawDetails');
 
             });
 

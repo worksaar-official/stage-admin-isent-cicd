@@ -197,7 +197,7 @@ class StoreLogic
 
 
     $query = Store::withOpen($longitude??0,$latitude??0)
-            ->withCount(['items','campaigns','reviews'])
+            ->withCount(['items','campaigns'])
             ->with(['discount'=>function($q){
                 return $q->validate();
             }])

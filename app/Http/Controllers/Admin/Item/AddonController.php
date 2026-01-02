@@ -18,6 +18,7 @@ use App\Models\AddOn as ModelsAddOn;
 use App\Models\AddonCategory;
 use App\Services\AddonService;
 use App\Traits\ImportExportTrait;
+use Beste\Json;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Js;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use OpenSpout\Common\Exception\InvalidArgumentException;
@@ -159,7 +161,7 @@ class AddonController extends BaseController
     public function updateStatus(Request $request): RedirectResponse
     {
         $this->addonRepo->update(id: $request['id'], data: ['status' => $request['status']]);
-        Toastr::success(translate('messages.addon_status_updated'));
+        Toastr::success(translate('messages.category_status_updated'));
         return back();
     }
 
