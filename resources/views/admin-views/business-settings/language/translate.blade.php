@@ -190,7 +190,7 @@
                             <span class="text-dark">{{ translate('note:') }}</span> {{ translate('All_the_translations_may_not_be_fully_accurate.') }}
                         </p>
                         <div class="d-flex justify-content-center gap-3 pt-1">
-                            <button type="button" class="btn btn--primary location_reload"  >{{ translate('messages.Cancel') }}</button>
+                            <button type="button" class="btn btn--primary location-reload"  >{{ translate('messages.Cancel') }}</button>
                         </div>
                     </div>
                 </div>

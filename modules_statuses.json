@@ -2,6 +2,6 @@
     "Gateways": true,
     "Rental": true,
     "Controller": true,
-    "DashboardController": true,
-    "TaxModule": true
+    "TaxModule": true,
+    "AI": true
 }

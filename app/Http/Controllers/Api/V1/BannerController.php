@@ -9,7 +9,7 @@ use App\CentralLogics\Helpers;
 use App\CentralLogics\BannerLogic;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Validator;
+
 
 class BannerController extends Controller
 {

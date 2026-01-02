@@ -19,7 +19,7 @@
         <!-- End Page Header -->
         <div class="card mb-3">
             <div class="card-body">
-                <form action="{{route('vendor.coupon.store')}}" method="post">
+                <form action="{{route('vendor.coupon.store')}}" method="post" class="custom-validation">
                     @csrf
                     <div class="row">
                         <div class="col-12">
@@ -39,7 +39,7 @@
                                 @endforeach
                             </ul>
                             <div class="lang_form" id="default-form">
-                                <div class="form-group">
+                                <div class="form-group error-wrapper">
                                     <label class="input-label"
                                         for="default_title">{{ translate('messages.title') }}
                                         ({{ translate('messages.Default') }})
@@ -54,7 +54,7 @@
                                 @foreach (json_decode($language) as $lang)
                                     <div class="d-none lang_form"
                                         id="{{ $lang }}-form">
-                                        <div class="form-group">
+                                        <div class="form-group error-wrapper">
                                             <label class="input-label"
                                                 for="{{ $lang }}_title">{{ translate('messages.title') }}
                                                 ({{ strtoupper($lang) }})
@@ -68,7 +68,7 @@
                                 @endforeach
                             @else
                                 <div id="default-form">
-                                    <div class="form-group">
+                                    <div class="form-group error-wrapper">
                                         <label class="input-label"
                                             for="title">{{ translate('messages.title') }} ({{ translate('messages.default') }})</label>
                                         <input type="text" id="title" name="title[]" class="form-control"
@@ -79,7 +79,7 @@
                             @endif
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="coupon_type">{{translate('messages.coupon_type')}}</label>
                                 <select id="coupon_type" name="coupon_type" class="form-control" >
                                     <option value="default">{{translate('messages.default')}}</option>
@@ -93,32 +93,32 @@
 
 
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="coupon_code">{{translate('messages.code')}}</label>
                                 <input id="coupon_code" type="text" name="code" class="form-control"
                                     placeholder="{{\Illuminate\Support\Str::random(8)}}" required maxlength="100">
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="coupon_limit">{{translate('messages.limit_for_same_user')}}</label>
                                 <input type="number" name="limit" id="coupon_limit" class="form-control" placeholder="{{ translate('messages.Ex :') }} 10" max="100">
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="date_from">{{translate('messages.start_date')}}</label>
                                 <input type="date" name="start_date" class="form-control" id="date_from" required>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="date_to">{{translate('messages.expire_date')}}</label>
                                 <input type="date" name="expire_date" class="form-control" id="date_to" required>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="discount_type">{{translate('messages.discount_type')}}</label>
                                 <select name="discount_type" class="form-control" id="discount_type">
                                     <option value="amount">
@@ -129,19 +129,19 @@
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="discount">{{translate('messages.discount')}} </label>
                                 <input type="number" step="0.01" min="1" max="999999999999.99" name="discount" id="discount" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="max_discount">{{translate('messages.max_discount')}}</label>
                                 <input type="number" step="0.01" min="0" value="0" max="999999999999.99" name="max_discount" id="max_discount" class="form-control" readonly>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="min_purchase">{{translate('messages.min_purchase')}}</label>
                                 <input id="min_purchase" type="number" step="0.01" name="min_purchase" value="0" min="0" max="999999999999.99" class="form-control"
                                     placeholder="100">

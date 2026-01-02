@@ -14,10 +14,7 @@ class Order extends Model
 {
     use HasFactory , ReportFilter;
 
-    protected $fillable = ['order_source'];
-
     protected $casts = [
-        'order_source' => 'string',
         'order_amount' => 'float',
         'coupon_discount_amount' => 'float',
         'total_tax_amount' => 'float',
@@ -48,8 +45,7 @@ class Order extends Model
         'cutlery' => 'boolean',
         'is_guest' => 'boolean',
         'ref_bonus_amount' => 'float',
-        'local_currency_rate' => 'float',
-        'local_currency_delivery_fees' => 'float',
+        'bring_change_amount'=>'integer',
     ];
 
     protected $appends = ['module_type','order_attachment_full_url','order_proof_full_url'];
@@ -103,6 +99,10 @@ class Order extends Model
     {
         return $this->hasOne(CashBackHistory::class, 'order_id');
     }
+    public function parcelCancellation()
+    {
+        return $this->hasOne(ParcelCancellation::class, 'order_id');
+    }
 
 
     public function offline_payments()
@@ -113,6 +113,10 @@ class Order extends Model
     public function details()
     {
         return $this->hasMany(OrderDetail::class);
+    }
+    public function reviews()
+    {
+        return $this->hasMany(Review::class , 'order_id');
     }
 
     public function payments()

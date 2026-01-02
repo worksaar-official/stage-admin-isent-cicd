@@ -6,6 +6,7 @@ use App\Contracts\Repositories\UnitRepositoryInterface;
 use App\Contracts\Repositories\TranslationRepositoryInterface;
 use App\Enums\ExportFileNames\Admin\Unit;
 use App\Enums\ViewPaths\Admin\Unit as UnitViewPath;
+use App\Exports\UnitExport;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Admin\UnitAddRequest;
 use App\Http\Requests\Admin\UnitUpdateRequest;
@@ -21,8 +22,8 @@ use OpenSpout\Common\Exception\InvalidArgumentException;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Common\Exception\UnsupportedTypeException;
 use OpenSpout\Writer\Exception\WriterNotOpenedException;
-use Rap2hpoutre\FastExcel\FastExcel;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+
+use Maatwebsite\Excel\Facades\Excel;
 
 class UnitController extends BaseController
 {
@@ -88,15 +89,19 @@ class UnitController extends BaseController
      * @throws UnsupportedTypeException
      * @throws InvalidArgumentException
      */
-    public function exportList(string $type): StreamedResponse|string
+    public function exportList(string $type,Request $request)
     {
-        $collection = $this->unitRepo->getList();
+        $collection = $this->unitRepo->getExportList($request);
 
-        if($type == 'excel'){
-            return (new FastExcel($this->unitService->processExportData(collection: $collection)))->download(Unit::EXPORT_XLSX);
-        }else{
-            return (new FastExcel($this->unitService->processExportData(collection: $collection)))->download(Unit::EXPORT_CSV);
+        $data=[
+            'data' =>$collection,
+            'search' =>$request['search'] ?? null,
+        ];
+
+        if($type == 'csv'){
+            return Excel::download(new UnitExport($data), 'Unit.csv');
         }
+        return Excel::download(new UnitExport($data), 'Unit.xlsx');
     }
 
     public function search(Request $request): JsonResponse

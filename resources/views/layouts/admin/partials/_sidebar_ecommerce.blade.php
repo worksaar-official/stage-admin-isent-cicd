@@ -442,17 +442,6 @@
                 @endif
                 <!-- End Unit -->
 
-                <!-- Local Currency -->
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/local-currency*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.local-currency.index') }}" title="Local Currency">
-                        <i class="tio-money nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate text-capitalize">
-                            Local Currency
-                        </span>
-                    </a>
-                </li>
-                <!-- End Local Currency -->
-
                 <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/brand*') ? 'active' : '' }}">
                     <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.brand.add') }}" title="{{ translate('messages.Brands') }}">
                         <i class="tio-medal nav-icon"></i>

@@ -176,6 +176,8 @@ class Banner extends Model
     {
         parent::boot();
         static::saved(function ($model) {
+            Helpers::deleteCacheData('banners_');
+
             if($model->isDirty('image')){
                 $value = Helpers::getDisk();
 
@@ -190,5 +192,16 @@ class Banner extends Model
                 ]);
             }
         });
+        static::created(function () {
+            Helpers::deleteCacheData('banners_');
+        });
+        static::deleted(function(){
+            Helpers::deleteCacheData('banners_');
+        });
+
+        static::updated(function(){
+            Helpers::deleteCacheData('banners_');
+        });
+
     }
 }

@@ -522,17 +522,6 @@
                 @endif
                 <!-- End Unit -->
 
-                <!-- Local Currency -->
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/local-currency*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.local-currency.index') }}" title="Local Currency">
-                        <i class="tio-money nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate text-capitalize">
-                            Local Currency
-                        </span>
-                    </a>
-                </li>
-                <!-- End Local Currency -->
-
                 <!-- AddOn -->
                 @if (\App\CentralLogics\Helpers::module_permission_check('addon'))
                 <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/addon*') ? 'active' : '' }}">

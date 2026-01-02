@@ -481,6 +481,8 @@ class VendorController extends Controller
             }
             $order->cancellation_reason=$request->reason;
             $order->canceled_by='store';
+        } else if ($order->order_type != 'parcel' && in_array($request->status, ['picked_up']) ) {
+            Helpers::sendOrderDeliveryVerificationOtp($order);
         }
 
         $order->order_status = $request['status'];

@@ -16,8 +16,6 @@ use App\CentralLogics\CustomerLogic;
 use App\CentralLogics\ProductLogic;
 use App\Mail\OrderVerificationMail;
 use App\Models\Store;
-use Illuminate\Support\Facades\Http;
-use App\Models\Zone;
 use App\Mail\PlaceOrder;
 use App\Models\BusinessSetting;
 use App\Models\DMVehicle;
@@ -27,7 +25,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Scopes\StoreScope;
 use Illuminate\Support\Facades\Config;
-use App\Models\LocalCurrencyConversion;
 
 class POSController extends Controller
 {
@@ -348,7 +345,7 @@ class POSController extends Controller
             $selected_item = $request->all();
             $stock= $this->get_stocks($product,$selected_item);
             if($product?->maximum_cart_quantity > 0){
-                if((isset($stock) && min($stock, $product?->maximum_cart_quantity < $request->quantity )||  $product?->maximum_cart_quantity <  $request->quantity  ) ){
+                if(((isset($stock) && min($stock, $product?->maximum_cart_quantity) < $request->quantity )||  $product?->maximum_cart_quantity <  $request->quantity  ) ){
                     return response()->json([
                         'data' => 0
                     ]);
@@ -544,7 +541,7 @@ class POSController extends Controller
                 $this->setPosCalculatedTax($product->store);
             }
         } catch (\Exception $e) {
-            info('Failed to recalculate tax after quantity update: ' . $e->getMessage());
+            \Log::error('Failed to recalculate tax after quantity update: ' . $e->getMessage());
         }
 
         return response()->json([],200);
@@ -692,7 +689,6 @@ class POSController extends Controller
         $order_details = [];
         $product_data = [];
         $order = new Order();
-        $order->order_source = 'isent_web'; // Orders from admin POS
         $order->id = 100000 + Order::count() + 1;
         if (Order::find($order->id)) {
             $order->id = Order::latest()->first()->id + 1;
@@ -753,7 +749,8 @@ class POSController extends Controller
         $total_price = $product_price + $total_addon_price - $store_discount_amount - $flash_sale_admin_discount_amount - $flash_sale_vendor_discount_amount;
         $totalDiscount = $store_discount_amount + $flash_sale_admin_discount_amount + $flash_sale_vendor_discount_amount;
 
-
+        $order->flash_admin_discount_amount = round($flash_sale_admin_discount_amount, config('round_up_to_digit'));
+        $order->flash_store_discount_amount = round($flash_sale_vendor_discount_amount, config('round_up_to_digit'));
         $finalCalculatedTax =  Helpers::getFinalCalculatedTax($order_details, $additionalCharges, $totalDiscount, $total_price, $store->id);
 
         $tax_amount = $finalCalculatedTax['tax_amount'];
@@ -966,298 +963,5 @@ class POSController extends Controller
             return response()->json($user,200);
         }
         return response()->json([],200);
-    }
-
-	public function calculateDelivery(Request $request)
-    {
-        $request->validate([
-            'store_code' => 'required|exists:stores,store_code',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric'
-        ]);
-
-        $store = Store::where('store_code', $request->store_code)->first();
-
-        if (!$store) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Store not found'
-            ], 404);
-        }
-
-        if (!$this->isLocationInZone($request->latitude, $request->longitude, $store->zone_id)) {
-            return response()->json([
-                'success' => false,
-                'message' => translate('messages.out_of_coverage')
-            ], 400);
-        }
-
-        $address = $this->getAddressFromCoordinates($request->latitude, $request->longitude);
-
-        $distanceData = $this->calculateDistance($store, $request->latitude, $request->longitude);
-        $distanceMeter = $distanceData['distance_meters'];
-        $distanceKm = round($distanceMeter / 1000, 2);
-
-        $deliveryConfig = $this->getDeliveryConfiguration($store);
-
-        $extraCharge = $this->calculateExtraCharge($distanceKm, $deliveryConfig['self_delivery_status']);
-
-        $perKmShippingCharge = $deliveryConfig['per_km_shipping_charge'];
-        $minimumShippingCharge = $deliveryConfig['minimum_shipping_charge'];
-        $maximumShippingCharge = $deliveryConfig['maximum_shipping_charge'];
-
-        $deliveryAmount = $this->calculateTieredDeliveryFee($distanceKm);
-
-        $deliveryAmount += $extraCharge;
-        if ($maximumShippingCharge > 0 && $deliveryAmount > $maximumShippingCharge) {
-            $deliveryAmount = $maximumShippingCharge;
-        }
-
-        $deliveryCharge = round($deliveryAmount, 2);
-
-        if ($deliveryCharge > 1000) {
-            $deliveryCharge = $deliveryCharge / 1000;
-        }
-        $deliveryCharge = round($deliveryCharge, 2);
-
-        $localCurrency = LocalCurrencyConversion::first();
-        $localCurrencyRate = $localCurrency ? $localCurrency->local_rate : 1;
-
-        $localCurrencyDeliveryFees = $deliveryCharge * $localCurrencyRate;
-        $localCurrencyDeliveryFees = round($localCurrencyDeliveryFees, 2);
-
-        $distanceKm = round($distanceKm, 2);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'latitude' => (float)$request->latitude,
-                'longitude' => (float)$request->longitude,
-                'address' => $address,
-                'distance' => (float)$distanceKm,
-                'delivery_fee' => (float)$deliveryCharge,
-                'extra_charge' => (float)$extraCharge,
-                'local_currency_rate' => (float)$localCurrencyRate,
-                'local_currency_delivery_fees' => (float)$localCurrencyDeliveryFees,
-                'currency_symbol' => \App\CentralLogics\Helpers::currency_symbol()
-            ]
-        ]);
-    }
-
-    /**
-     * New tiered delivery fee calculation
-     * 0 – 5 km       => 3 flat
-     * 5.01 – 8 km    => 3 + 0.50 per km (only for kms between 5 and 8)
-     * Above 8 km     => 3 + (0.50 per km for 5–8) + 0.70 per km thereafter
-     */
-    private function calculateTieredDeliveryFee(float $distanceKm): float
-    {
-        if ($distanceKm <= 5) {
-            return 3.0;
-        }
-
-        if ($distanceKm <= 8) {
-            $extraKm = $distanceKm - 5;
-            return 3.0 + ($extraKm * 0.50);
-        }
-
-        // Above 8 km
-        $fixed_cost  = 3 + 1.5;
-        $tier3Km  = $distanceKm - 8;
-        $feeTier3 = $tier3Km * 0.70;
-        return  $fixed_cost + $feeTier3;
-    }
-
-
-    /**
-     * Check if user location is inside store zone polygon
-     */
-    private function isLocationInZone($latitude, $longitude, $zoneId)
-    {
-        $zone = Zone::find($zoneId);
-        if (!$zone || !$zone->coordinates) return false;
-
-        $coordinates = $this->parsePolygonCoordinates($zone->coordinates);
-        if (!is_array($coordinates) || empty($coordinates)) return false;
-
-        return $this->pointInPolygon($latitude, $longitude, $coordinates);
-    }
-
-    /**
-     * Parse POLYGON WKT to array
-     */
-    private function parsePolygonCoordinates($wkt)
-    {
-        $wkt = str_replace(['POLYGON((', '))'], '', $wkt);
-        $points = explode(',', $wkt);
-        $coordinates = [];
-
-        foreach ($points as $point) {
-            $coords = preg_split('/\s+/', trim($point));
-            if (count($coords) == 2) {
-                $coordinates[] = [
-                    'lat' => (float)$coords[1],
-                    'lng' => (float)$coords[0],
-                ];
-            }
-        }
-        return $coordinates;
-    }
-
-    /**
-     * Point in polygon algorithm
-     */
-    private function pointInPolygon($latitude, $longitude, $polygon)
-    {
-        $vertices_x = array_column($polygon, 'lng');
-        $vertices_y = array_column($polygon, 'lat');
-        $points_polygon = count($vertices_x) - 1;
-
-        $c = false;
-        for ($i = 0, $j = $points_polygon; $i < $points_polygon; $j = $i++) {
-            if ((($vertices_y[$i] > $latitude) != ($vertices_y[$j] > $latitude)) &&
-                ($longitude < ($vertices_x[$j] - $vertices_x[$i]) * ($latitude - $vertices_y[$i]) / ($vertices_y[$j] - $vertices_y[$i]) + $vertices_x[$i])) {
-                $c = !$c;
-            }
-        }
-
-        return $c;
-    }
-
-    /**
-     * Get address from coordinates using Google Geocoding API
-     */
-    private function getAddressFromCoordinates($latitude, $longitude)
-    {
-        $apiKey = env('GOOGLE_MAP_KEY');
-        $url = "https://maps.googleapis.com/maps/api/geocode/json";
-
-        $response = Http::get($url, [
-            'latlng' => "$latitude,$longitude",
-            'key' => $apiKey
-        ]);
-
-        if ($response->successful()) {
-            $data = $response->json();
-            if (isset($data['results'][0]['formatted_address'])) {
-                return $data['results'][0]['formatted_address'];
-            }
-        }
-        return 'Address not found';
-    }
-
-    /**
-     * Calculate distance using Google DistanceMatrix API or fallback Haversine
-     */
-    private function calculateDistance($store, $destinationLat, $destinationLng)
-    {
-        $apiKey = env('GOOGLE_MAP_KEY');
-        $origin = $store->latitude . ',' . $store->longitude;
-        $destination = "$destinationLat,$destinationLng";
-
-        $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json', [
-            'origins' => $origin,
-            'destinations' => $destination,
-            'units' => 'metric',
-            'mode' => 'driving',
-            'key' => $apiKey,
-        ]);
-
-        if ($response->successful()) {
-            $data = $response->json();
-            $status = $data['rows'][0]['elements'][0]['status'] ?? null;
-
-            if ($status === 'OK') {
-                $distanceMeters = $data['rows'][0]['elements'][0]['distance']['value'];
-                $distanceKm = round($distanceMeters / 1000, 2);
-
-                return [
-                    'distance_text' => $data['rows'][0]['elements'][0]['distance']['text'],
-                    'distance_meters' => $distanceMeters,
-                    'distance_km' => $distanceKm,
-                    'duration_text' => $data['rows'][0]['elements'][0]['duration']['text'],
-                    'duration_value' => $data['rows'][0]['elements'][0]['duration']['value']
-                ];
-            }
-        }
-
-        // Fallback Haversine: swap lat/lng if needed
-        $storeLat = $store->latitude;
-        $storeLng = $store->longitude;
-
-        $distanceKm = $this->calculateHaversineDistance($storeLat, $storeLng, $destinationLat, $destinationLng);
-
-        return [
-            'distance_text' => $distanceKm . ' km (approx)',
-            'distance_meters' => $distanceKm * 1000,
-            'distance_km' => $distanceKm,
-            'duration_text' => 'N/A',
-            'duration_value' => 0
-        ];
-    }
-
-    /**
-     * Haversine formula for fallback distance calculation
-     */
-    private function calculateHaversineDistance($lat1, $lon1, $lat2, $lon2)
-    {
-        $earthRadius = 6371; // km
-
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-
-        $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
-
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-        $distance = $earthRadius * $c;
-
-        return round($distance, 2); // km
-    }
-
-    /**
-     * Get delivery configuration for the store
-     */
-    private function getDeliveryConfiguration($store)
-    {
-        $moduleCharge = $store->zone->modules()->where('modules.id', $store->module_id)->first();
-
-        if ($store->sub_self_delivery) {
-            $perKm = $store->per_km_shipping_charge ?? 0;
-            $min = $store->minimum_shipping_charge ?? 0;
-            $max = $store->maximum_shipping_charge ?? 0;
-            $selfDelivery = 1;
-        } else {
-            $selfDelivery = 0;
-            if ($moduleCharge) {
-                $perKm = $moduleCharge->pivot->per_km_shipping_charge;
-                $min = $moduleCharge->pivot->minimum_shipping_charge;
-                $max = $moduleCharge->pivot->maximum_shipping_charge ?? 0;
-            } else {
-                $perKm = (float)BusinessSetting::where(['key' => 'per_km_shipping_charge'])->first()->value;
-                $min = (float)BusinessSetting::where(['key' => 'minimum_shipping_charge'])->first()->value;
-                $max = 0;
-            }
-        }
-
-        return [
-            'per_km_shipping_charge' => (float)$perKm,
-            'minimum_shipping_charge' => (float)$min,
-            'maximum_shipping_charge' => (float)$max,
-            'self_delivery_status' => $selfDelivery
-        ];
-    }
-
-    /**
-     * Calculate extra charge (if any external API is needed)
-     */
-    private function calculateExtraCharge($distance, $selfDeliveryStatus)
-    {
-        try {
-            return 0;
-        } catch (\Exception $e) {
-            return 0;
-        }
     }
 }

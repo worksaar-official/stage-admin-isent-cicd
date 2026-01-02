@@ -29,7 +29,6 @@
                 {{ translate('messages.data') }}</label>
         @endif
     </td>
-    <td class="white-space-nowrap">{{ $ot?->order?->delivery_man?->full_name ?? 'NA' }}</td>
     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order['order_amount'] - $ot->order['dm_tips']-$ot->order['delivery_charge'] - $ot['tax'] + $ot->order['coupon_discount_amount'] + $ot->order['store_discount_amount']) }}</td>
     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order->details->sum('discount_on_item')) }}</td>
     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order['coupon_discount_amount']) }}</td>
@@ -43,7 +42,6 @@
     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_fee_comission) }}</td>
     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->admin_commission)) }}</td>
     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->store_amount - $ot->tax) }}</td>
-    <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot?->order?->dm_tips ?? 0) }}</td>
     @if ($ot->received_by == 'admin')
         <td class="text-capitalize white-space-nowrap">{{ translate('messages.admin') }}</td>
     @elseif ($ot->received_by == 'deliveryman')

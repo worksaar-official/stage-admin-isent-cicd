@@ -88,6 +88,16 @@ $countryCode= strtolower($country?$country->value:'auto');
 @include('layouts.admin.partials._footer')
 <!-- End Footer -->
 
+    <div class="d-none" id="text-validate-translate"
+        data-required="{{ translate('this_field_is_required') }}"
+        data-something-went-wrong="{{ translate('something_went_wrong!') }}"
+        data-max-limit-crossed="{{ translate('max_limit_crossed') }}"
+        data-file-size-larger="{{ translate('file_size_is_larger') }}"
+        data-passwords-do-not-match="{{ translate('passwords_do_not_match') }}"
+        data-valid-email="{{ translate('please_enter_a_valid_email') }}"
+        data-password-validation="{{ translate('password_must_be_8+_chars_with_upper,_lower,_number_&_symbol') }}"
+    ></div>
+
     <div class="modal fade" id="popup-modal">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -121,7 +131,7 @@ $countryCode= strtolower($country?$country->value:'auto');
                     <div class="max-349 mx-auto mb-20">
                         <div>
                             <div class="text-center">
-                                <img id="toggle-image" alt="" class="mb-20">
+                                <img id="toggle-image" alt="" class="mb-20 initial--10">
                                 <h5 class="modal-title" id="toggle-title"></h5>
                             </div>
                             <div class="text-center" id="toggle-message">
@@ -151,7 +161,7 @@ $countryCode= strtolower($country?$country->value:'auto');
                     <div class="max-349 mx-auto mb-20">
                         <div>
                             <div class="text-center">
-                                <img id="toggle-status-image" alt="" class="mb-20">
+                                <img id="toggle-status-image" alt="" class="mb-20 initial--10">
                                 <h5 class="modal-title" id="toggle-status-title"></h5>
                             </div>
                             <div class="text-center" id="toggle-status-message">
@@ -261,6 +271,7 @@ if(in_array(config('module.current_module_type'),config('module.module_type') ))
 <!-- JS Front -->
 
 <script src="{{asset('public/assets/admin')}}/js/vendor.min.js"></script>
+<script src="{{asset('public/assets/admin')}}/js/jquery.validate.min.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/theme.min.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/sweet_alert.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/bootstrap-tour-standalone.min.js"></script>
@@ -268,6 +279,7 @@ if(in_array(config('module.current_module_type'),config('module.module_type') ))
 <script src="{{asset('public/assets/admin')}}/js/emogi-area.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/toastr.js"></script>
 <script src="{{asset('public/assets/admin/js/app-blade/admin.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/form-validate.js')}}"></script>
 
 
 {!! Toastr::message() !!}

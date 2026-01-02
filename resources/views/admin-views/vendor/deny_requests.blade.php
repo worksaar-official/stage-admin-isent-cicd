@@ -31,7 +31,7 @@
                 <div class="col-md-12">
                     <div class="js-nav-scroller hs-nav-scroller-horizontal mt-2">
                         <!-- Nav -->
-                        <ul class="nav nav-tabs mb-3 border-0 nav--tabs">
+                        <ul class="nav nav-tabs mb-3 border-0 nav--tabs nav--pills">
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('admin.store.pending-requests') }}"   aria-disabled="true">{{translate('messages.pending_stores')}}</a>
                             </li>
@@ -58,7 +58,7 @@
                         <div class="input-group input--group">
                             <input id="datatableSearch_" type="search" name="search" class="form-control"
                                     placeholder="{{translate('ex_:_Search_Store_Name')}}" aria-label="{{translate('messages.search')}}" value="{{isset($search_by) ? $search_by : ''}}" required>
-                            <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
+                            <button type="submit" class="btn btn--primary"><i class="tio-search"></i></button>
                         </div>
                     </form>
                     <!-- End Search -->
@@ -76,7 +76,7 @@
                             "paging":false
 
                         }'>
-                    <thead class="thead-light">
+                    <thead class="bg-table-head">
                     <tr>
                         <th class="border-0">{{translate('sl')}}</th>
                         <th class="border-0">{{translate('messages.store_information')}}</th>
@@ -84,7 +84,7 @@
                         <th class="border-0">{{translate('messages.owner_information')}}</th>
                         <th class="border-0">{{translate('messages.zone')}}</th>
                         <th class="text-uppercase border-0">{{translate('messages.status')}}</th>
-                        <th class="border-0">{{translate('messages.action')}}</th>
+                        <th class="border-0 text-center " >{{translate('messages.action')}}</th>
                     </tr>
                     </thead>
 
@@ -137,12 +137,23 @@
                             </td>
 
                             <td>
+                                 <div class="btn--container justify-content-center">
                                 @if($store->vendor->status == 0)
-                                    <a class="btn action-btn btn--primary btn-outline-primary float-right mr-2 request_alert" data-toggle="tooltip" data-placement="top"
+                                    <a class="btn action-btn btn-outline-theme-dark"
+                                    href="{{route('admin.store.edit',[$store['id'],'pending'=>1])}}" title="{{translate('messages.edit_store')}}"><i class="tio-edit"></i>
+                                    </a>
+
+                                    <a class="btn action-btn btn--primary btn-outline-primary float-right mr-2 swal_fire_alert" data-toggle="tooltip" data-placement="top"
                                        data-original-title="{{ translate('messages.approve') }}"
-                                       data-url="{{route('admin.store.application',[$store['id'],1])}}" data-message="{{translate('messages.you_want_to_approve_this_application')}}"
+                                       data-title="{{translate('messages.are_you_sure_?')}}"
+                                       data-image_url="{{ asset('public/assets/admin/img/off-danger.png') }}"
+                                       data-confirm_button_text="{{ translate('messages.yes') }}"
+                                       data-cancel_button_text="{{ translate('messages.No') }}"
+                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"
+                                       data-url="{{route('admin.store.application',[$store['id'],1])}}"
                                     href="javascript:"><i class="tio-done font-weight-bold"></i></a>
                                 @endif
+                                 </div>
                             </td>
                         </tr>
                     @endforeach
@@ -174,29 +185,7 @@
 @push('script_2')
     <script>
         "use strict";
-        $('.status_change_alert').on('click', function (event) {
-            let url = $(this).data('url');
-            let message = $(this).data('message');
-            status_change_alert(url, message, event)
-        })
-        function status_change_alert(url, message, e) {
-            e.preventDefault();
-            Swal.fire({
-                title: '{{ translate('Are you sure?') }}' ,
-                text: message,
-                type: 'warning',
-                showCancelButton: true,
-                cancelButtonColor: 'default',
-                confirmButtonColor: '#FC6A57',
-                cancelButtonText: '{{translate('messages.no')}}',
-                confirmButtonText: '{{translate('messages.yes')}}',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    location.href=url;
-                }
-            })
-        }
+
         $(document).on('ready', function () {
             // INITIALIZATION OF DATATABLES
             // =======================================================
@@ -238,29 +227,17 @@
             });
         });
 
-        $('.request_alert').on('click', function (event) {
+        $('.swal_fire_alert').on('click', function (event) {
             let url = $(this).data('url');
             let message = $(this).data('message');
-            request_alert(url, message)
+            let title = $(this).data('title');
+            let imageUrl = $(this).data('image_url');
+            let cancelButtonText = $(this).data('cancel_button_text');
+            let confirmButtonText = $(this).data('confirm_button_text');
+            swalFire(url,title, message, imageUrl,cancelButtonText, confirmButtonText)
         })
 
-        function request_alert(url, message) {
-            Swal.fire({
-                title: '{{translate('messages.are_you_sure')}}',
-                text: message,
-                type: 'warning',
-                showCancelButton: true,
-                cancelButtonColor: 'default',
-                confirmButtonColor: '#FC6A57',
-                cancelButtonText: '{{translate('messages.no')}}',
-                confirmButtonText: '{{translate('messages.yes')}}',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    location.href = url;
-                }
-            })
-        }
+
 
         $('#search-form').on('submit', function () {
             let formData = new FormData(this);

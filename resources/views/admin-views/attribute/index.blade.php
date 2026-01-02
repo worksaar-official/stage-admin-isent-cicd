@@ -157,6 +157,7 @@
                             <thead class="thead-light">
                             <tr class="text-center">
                                 <th class="border-0">{{translate('sl')}}</th>
+                                <th class="border-0">{{translate('ID')}}</th>
                                 <th class="border-0">{{translate('messages.name')}}</th>
                                 <th class="border-0">{{translate('messages.action')}}</th>
                             </tr>
@@ -169,6 +170,11 @@
                                     <td class="text-center">
                                         <span class="mr-3">
                                             {{$key+$attributes->firstItem()}}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="mr-3">
+                                            {{$attribute['id']}}
                                         </span>
                                     </td>
                                     <td class="text-center">

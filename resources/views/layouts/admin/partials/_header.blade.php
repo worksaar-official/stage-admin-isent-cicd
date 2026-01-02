@@ -329,11 +329,9 @@
     <div class="d-flex flex-column">        
         <!-- <div class="tour-guide-items text-capitalize fs-14 text-title">Guideline</div>                 -->
         <div class="tour-guide-items">
-            <!-- <a href="https://youtube.com/playlist?list=PLLFMbDpKMZBxgtX3n3rKJvO5tlU8-ae2Y" target="_blank" -->
-             <a href="https://isent.online/help-and-support" target="_blank"
+            <a href="https://youtube.com/playlist?list=PLLFMbDpKMZBxgtX3n3rKJvO5tlU8-ae2Y" target="_blank"
                class="d-flex align-items-center gap-10px">
-                <!-- <span class="text-capitalize fs-14 text-title">{{ translate('Turotial') }}</span> -->
-                 <span class="text-capitalize fs-14 text-title"> Support </span>
+                <span class="text-capitalize fs-14 text-title">{{ translate('Turotial') }}</span>
             </a>
         </div>    
         <div class="tour-guide-items d-flex cursor-pointer align-items-center gap-10px restart-Tour">

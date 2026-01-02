@@ -33,7 +33,7 @@ class CommonConditionAddRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|unique:attributes|max:100',
+            'name' => 'required|max:100|unique:common_conditions,name,' . ($this->id ? "$this->id" : ''),
             'name.0' => 'required',
         ];
     }

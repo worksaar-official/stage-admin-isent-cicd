@@ -29,6 +29,7 @@
         "mercadopago/dx-php": "3.0.7",
         "mpdf/mpdf": "^8.0",
         "nwidart/laravel-modules": "9.0",
+        "openai-php/laravel": "^0.11.0",
         "paypal/paypal-checkout-sdk": "^1.0",
         "phonepe/phonepe-pg-php-sdk": "^1.0",
         "rap2hpoutre/fast-excel": "^5.2",
@@ -102,7 +103,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "composer/package-versions-deprecated": true
+            "composer/package-versions-deprecated": true,
+            "php-http/discovery": true
         }
     },
 
