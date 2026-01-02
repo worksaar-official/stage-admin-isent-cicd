@@ -149,7 +149,7 @@
                                 </div>
                                 <div class="col-md-4 col-lg-4 col-sm-6">
                                     <div class="form-group">
-                                        <label class="input-label" for="max_discount">{{translate('messages.Max Cashback')}} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
+                                        <label class="input-label" for="max_discount">{{translate('messages.Maximum_Discount')}} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
                                         <input type="number"   placeholder="{{ translate('messages.Ex:_100') }}" step="0.01" min="0" value="{{  old('cashback_type')  == 'percentage' ?  old('max_discount') : null }}" max="999999999999.99" name="max_discount" id="max_discount" class="form-control">
                                     </div>
                                 </div>

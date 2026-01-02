@@ -21,7 +21,7 @@
         @php($language = $language->value ?? null)
         @php($defaultLang = 'en')
         <!-- End Page Header -->
-        <form action="{{route('admin.store.store')}}" method="post" enctype="multipart/form-data" class="custom-validation" id="vendor_form">
+        <form action="{{route('admin.store.store')}}" method="post" enctype="multipart/form-data" class="js-validate" id="vendor_form">
             @csrf
 
             <div class="row g-2">
@@ -47,27 +47,35 @@
                             @if ($language)
                             <div class="lang_form"
                             id="default-form">
-                                <div class="form-group error-wrapper">
+                                <div class="form-group">
                                     <label class="input-label"
                                         for="default_name">{{ translate('messages.name') }}
                                         ({{ translate('messages.Default') }})
                                     </label>
                                     <input type="text" name="name[]" id="default_name"
-                                        class="form-control" placeholder="{{ translate('messages.store_name') }}" required
-                                        >
+                                        class="form-control" placeholder="{{ translate('messages.store_name') }}"
+                                        required>
+                                </div>
+								<div class="form-group">
+                                    <label class="input-label"
+                                        for="store_code">{{ translate('messages.store_code') }}
+                                        ({{ translate('messages.Default') }})
+                                    </label>
+                                    <input type="text" name="store_code" id="store_code"
+                                        class="form-control" placeholder="{{ translate('messages.enter_store_code') }}"
+                                        required>
                                 </div>
                                 <input type="hidden" name="lang[]" value="default">
-                                <div class="form-group mb-0 error-wrapper">
+                                <div class="form-group mb-0">
                                     <label class="input-label"
                                         for="exampleFormControlInput1">{{ translate('messages.address') }} ({{ translate('messages.default') }})</label>
                                     <textarea type="text" name="address[]" placeholder="{{translate('messages.store')}}" class="form-control min-h-90px ckeditor"></textarea>
-
                                 </div>
                             </div>
                                 @foreach (json_decode($language) as $lang)
                                     <div class="d-none lang_form"
                                         id="{{ $lang }}-form">
-                                        <div class="form-group error-wrapper">
+                                        <div class="form-group">
                                             <label class="input-label"
                                                 for="{{ $lang }}_name">{{ translate('messages.name') }}
                                                 ({{ strtoupper($lang) }})
@@ -76,7 +84,7 @@
                                                 class="form-control" placeholder="{{ translate('messages.store_name') }}">
                                         </div>
                                         <input type="hidden" name="lang[]" value="{{ $lang }}">
-                                        <div class="form-group mb-0 error-wrapper">
+                                        <div class="form-group mb-0">
                                             <label class="input-label"
                                                 for="exampleFormControlInput1">{{ translate('messages.address') }} ({{ strtoupper($lang) }})</label>
                                             <textarea type="text" name="address[]" placeholder="{{translate('messages.store')}}" class="form-control min-h-90px ckeditor"></textarea>
@@ -85,20 +93,18 @@
                                 @endforeach
                             @else
                                 <div id="default-form">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.name') }} ({{ translate('messages.default') }})</label>
                                         <input type="text" name="name[]" class="form-control"
                                             placeholder="{{ translate('messages.store_name') }}" required>
-
                                     </div>
                                     <input type="hidden" name="lang[]" value="default">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.address') }}
                                         </label>
                                         <textarea type="text" name="address[]" placeholder="{{translate('messages.store')}}" class="form-control min-h-90px ckeditor"></textarea>
-
                                     </div>
                                 </div>
                             @endif
@@ -114,51 +120,47 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div class="d-flex flex-wrap flex-sm-nowrap __gap-12px gap-lg-5">
-                                <div class="error-wrapper">
-                                    <div class="__custom-upload-img">
-                                        @php($logo = \App\Models\BusinessSetting::where('key', 'logo')->first())
-                                        @php($logo = $logo->value ?? '')
-                                        <label class="form-label">
-                                            {{ translate('logo') }} <span class="text--primary">({{ translate('1:1') }})</span>
-                                        </label>
-                                        <label class="text-center position-relative">
-                                            <img class="img--110 min-height-170px min-width-170px onerror-image image--border" id="viewer"
-                                            data-onerror-image="{{ asset('public/assets/admin/img/upload.png') }}"
-                                                src="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                                alt="logo image" />
-                                            <div class="icon-file-group">
-                                                <div class="icon-file">
-                                                    <i class="tio-edit"></i>
-                                                    <input type="file" name="logo" id="customFileEg1" class="custom-file-input" required
-                                                        accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                                </div>
+                            <div class="d-flex flex-wrap flex-sm-nowrap __gap-12px">
+                                <div class="__custom-upload-img mr-lg-5">
+                                    @php($logo = \App\Models\BusinessSetting::where('key', 'logo')->first())
+                                    @php($logo = $logo->value ?? '')
+                                    <label class="form-label">
+                                        {{ translate('logo') }} <span class="text--primary">({{ translate('1:1') }})</span>
+                                    </label>
+                                    <label class="text-center position-relative">
+                                        <img class="img--110 min-height-170px min-width-170px onerror-image image--border" id="viewer"
+                                        data-onerror-image="{{ asset('public/assets/admin/img/upload.png') }}"
+                                            src="{{ asset('public/assets/admin/img/upload-img.png') }}"
+                                            alt="logo image" />
+                                        <div class="icon-file-group">
+                                            <div class="icon-file">
+                                                <i class="tio-edit"></i>
+                                                <input type="file" name="logo" id="customFileEg1" class="custom-file-input"
+                                                    accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" >
                                             </div>
-                                        </label>
-                                    </div>
+                                        </div>
+                                    </label>
                                 </div>
 
-                                <div class="error-wrapper">
-                                    <div class="__custom-upload-img">
-                                        @php($icon = \App\Models\BusinessSetting::where('key', 'icon')->first())
-                                        @php($icon = $icon->value ?? '')
-                                        <label class="form-label">
-                                            {{ translate('Store Cover') }}  <span class="text--primary">({{ translate('2:1') }})</span>
-                                        </label>
-                                        <label class="text-center position-relative">
-                                            <img class="img--vertical min-height-170px min-width-170px onerror-image image--border" id="coverImageViewer"
-                                            data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                                src="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                                alt="Fav icon" />
-                                            <div class="icon-file-group">
-                                                <div class="icon-file">
-                                                    <i class="tio-edit"></i>
-                                                    <input type="file" name="cover_photo" id="coverImageUpload"  class="custom-file-input"
-                                                        accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" data-max-size="2mb">
-                                                </div>
+                                <div class="__custom-upload-img">
+                                    @php($icon = \App\Models\BusinessSetting::where('key', 'icon')->first())
+                                    @php($icon = $icon->value ?? '')
+                                    <label class="form-label">
+                                        {{ translate('Store Cover') }}  <span class="text--primary">({{ translate('2:1') }})</span>
+                                    </label>
+                                    <label class="text-center position-relative">
+                                        <img class="img--vertical min-height-170px min-width-170px onerror-image image--border" id="coverImageViewer"
+                                        data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
+                                            src="{{ asset('public/assets/admin/img/upload-img.png') }}"
+                                            alt="Fav icon" />
+                                        <div class="icon-file-group">
+                                            <div class="icon-file">
+                                                <i class="tio-edit"></i>
+                                                <input type="file" name="cover_photo" id="coverImageUpload"  class="custom-file-input"
+                                                    accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
                                             </div>
-                                        </label>
-                                    </div>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -177,22 +179,20 @@
                                 <div class="col-md-12">
                                     <div class="position-relative">
                                         <label class="input-label" for="tax">{{translate('Estimated Delivery Time ( Min & Maximum Time)')}}</label>
-                                        <div class="error-wrapper">
-                                            <input type="text" id="time_view" class="form-control" readonly required>
-                                        </div>
+                                        <input type="text" id="time_view" class="form-control" readonly>
                                         <a href="javascript:void(0)" class="floating-date-toggler">&nbsp;</a>
                                         <span class="offcanvas"></span>
                                         <div class="floating--date" id="floating--date">
                                             <div class="card shadow--card-2">
                                                 <div class="card-body">
                                                     <div class="floating--date-inner">
-                                                        <div class="item error-wrapper">
+                                                        <div class="item">
                                                             <label class="input-label"
                                                                 for="minimum_delivery_time">{{ translate('Minimum Time') }}</label>
                                                             <input id="minimum_delivery_time" type="number" name="minimum_delivery_time" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} 30"
                                                                 pattern="^[0-9]{2}$" required value="{{ old('minimum_delivery_time') }}">
                                                         </div>
-                                                        <div class="item error-wrapper">
+                                                        <div class="item">
                                                             <label class="input-label"
                                                                 for="maximum_delivery_time">{{ translate('Maximum Time') }}</label>
                                                             <input id="maximum_delivery_time" type="number" name="maximum_delivery_time" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} 60"
@@ -217,7 +217,7 @@
                             </div>
                             <div class="row g-3 my-0">
                                 <div class="col-lg-4">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="choice_zones">{{translate('messages.zone')}}<span
                                                 class="form-label-secondary" data-toggle="tooltip" data-placement="right"
         data-original-title="{{translate('messages.select_zone_for_map')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.select_zone_for_map')}}"></span></label>
@@ -235,29 +235,21 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="form-group error-wrapper">
-                                        <label class="input-label" for="latitude">{{translate('messages.latitude')}}
-                                            <span
+                                    <div class="form-group">
+                                        <label class="input-label" for="latitude">{{translate('messages.latitude')}}<span
                                                 class="form-label-secondary" data-toggle="tooltip" data-placement="right"
-                                            data-original-title="{{translate('messages.store_lat_lng_warning')}}">
-                                            <img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.store_lat_lng_warning')}}"></span>
-                                        </label>
+        data-original-title="{{translate('messages.store_lat_lng_warning')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.store_lat_lng_warning')}}"></span></label>
                                         <input type="text" id="latitude"
                                                 name="latitude" class="form-control"
                                                 placeholder="{{ translate('messages.Ex:') }} -94.22213" value="{{old('latitude')}}" required readonly>
-
                                     </div>
-                                    <div class="form-group mb-5 error-wrapper">
-                                        <label class="input-label" for="longitude">{{translate('messages.longitude')}}
-                                            <span
+                                    <div class="form-group mb-5">
+                                        <label class="input-label" for="longitude">{{translate('messages.longitude')}}<span
                                                 class="form-label-secondary" data-toggle="tooltip" data-placement="right"
-                                                data-original-title="{{translate('messages.store_lat_lng_warning')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.store_lat_lng_warning')}}">
-                                            </span>
-                                        </label>
+        data-original-title="{{translate('messages.store_lat_lng_warning')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.store_lat_lng_warning')}}"></span></label>
                                         <input type="text"
                                                 name="longitude" class="form-control"
                                                 placeholder="{{ translate('messages.Ex:') }} 103.344322" id="longitude" value="{{old('longitude')}}" required readonly>
-
                                     </div>
                                 </div>
                                 <div class="col-lg-8">
@@ -280,24 +272,21 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="f_name">{{translate('messages.first_name')}}</label>
                                         <input type="text" name="f_name" class="form-control" placeholder="{{translate('messages.first_name')}}"
                                                 value="{{old('f_name')}}"  required>
-
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="l_name">{{translate('messages.last_name')}}</label>
                                         <input type="text" name="l_name" class="form-control" placeholder="{{translate('messages.last_name')}}"
                                         value="{{old('l_name')}}"  required>
-
                                     </div>
-
                                 </div>
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="phone">{{translate('messages.phone')}}</label>
                                         <input type="tel" id="phone" name="phone" class="form-control"
                                         placeholder="{{ translate('messages.Ex:') }} 017********"
@@ -319,16 +308,16 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-4 col-12">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="email">{{translate('messages.email')}}</label>
                                         <input type="email" name="email" class="form-control" placeholder="{{ translate('messages.Ex:') }} ex@example.com"
                                         value="{{old('email')}}"  required>
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-12">
-                                    <div class="form-group error-wrapper mb-0">
+                                    <div class="js-form-message form-group mb-0">
                                         <label class="input-label" for="signupSrPassword">{{translate('messages.password')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right"
-                                         data-original-title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span></label>
+        data-original-title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span></label>
 
                                         <div class="input-group input-group-merge">
                                             <input type="password" class="js-toggle-password form-control" name="password" id="signupSrPassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
@@ -347,30 +336,44 @@
                                                 </a>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-12">
-                                    <div class="form-group error-wrapper mb-0">
+                                    <div class="js-form-message form-group mb-0">
                                         <label class="input-label" for="signupSrConfirmPassword">{{translate('messages.confirm_password')}}</label>
                                         <div class="input-group input-group-merge">
-                                            <input type="password" class="js-toggle-password form-control" name="confirmPassword" id="signupSrConfirmPassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
-                                            placeholder="{{ translate('messages.password_length_placeholder', ['length' => '8+']) }}"
-                                            aria-label="8+ characters required" required
-                                                    data-msg="Password does not match the confirm password."
-                                                    data-hs-toggle-password-options='{
-                                                    "target": [".js-toggle-password-target-1", ".js-toggle-password-target-2"],
-                                                    "defaultClass": "tio-hidden-outlined",
-                                                    "showClass": "tio-visible-outlined",
-                                                    "classChangeTarget": ".js-toggle-passowrd-show-icon-2"
-                                                    }'>
+                                        <input type="password" class="js-toggle-password form-control" name="confirmPassword" id="signupSrConfirmPassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                        placeholder="{{ translate('messages.password_length_placeholder', ['length' => '8+']) }}"
+                                        aria-label="8+ characters required" required
+                                                data-msg="Password does not match the confirm password."
+                                                data-hs-toggle-password-options='{
+                                                "target": [".js-toggle-password-target-1", ".js-toggle-password-target-2"],
+                                                "defaultClass": "tio-hidden-outlined",
+                                                "showClass": "tio-visible-outlined",
+                                                "classChangeTarget": ".js-toggle-passowrd-show-icon-2"
+                                                }'>
                                             <div class="js-toggle-password-target-2 input-group-append">
                                                 <a class="input-group-text" href="javascript:">
                                                 <i class="js-toggle-passowrd-show-icon-2 tio-visible-outlined"></i>
                                                 </a>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
 
+                                <div class="col-md-4 col-12">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="api_key">{{translate('API Key')}}</label>
+                                        <input type="text" name="api_key" class="form-control" placeholder="{{ translate('messages.Ex:') }} abc123xyz"
+                                        value="{{old('api_key')}}">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 col-12">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="webhook_url">{{translate('Webhook URL')}}</label>
+                                        <input type="url" name="webhook_url" class="form-control" placeholder="{{ translate('messages.Ex:') }} https://example.com/webhook"
+                                        value="{{old('webhook_url')}}">
                                     </div>
                                 </div>
                             </div>
@@ -387,13 +390,13 @@
                             <div class="row g-3">
                                 <div class="col-md-8 col-xxl-9">
                                     <div class="bg--secondary rounded p-20 h-100">
-                                        <div class="form-group  error-wrapper">
-                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Taxpayer Identification Number(TIN)')}} </label>
-                                            <input type="text" name="tin" placeholder="{{translate('Type Your Taxpayer Identification Number(TIN)')}}" class="form-control"  >
+                                        <div class="form-group">
+                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Taxpayer Identification Number(TIN)')}} <span class="text-danger">*</span></label>
+                                            <input type="text" name="tin" placeholder="{{translate('Type Your Taxpayer Identification Number(TIN)')}}" class="form-control" required>
                                         </div>
-                                        <div class="form-group mb-0  error-wrapper">
-                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Expire Date')}} </label>
-                                            <input type="date" name="tin_expire_date" class="form-control"  >
+                                        <div class="form-group mb-0">
+                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Expire Date')}} <span class="text-danger">*</span></label>
+                                            <input type="date" name="tin_expire_date" class="form-control" required>
                                         </div>
                                     </div>
                                 </div>
@@ -410,22 +413,22 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="form-group error-wrapper">
+                                        <div>
                                             <div id="file-assets"
                                                  data-picture-icon="{{ asset('public/assets/admin/img/picture.svg') }}"
                                                  data-document-icon="{{ asset('public/assets/admin/img/document.svg') }}"
                                                  data-blank-thumbnail="{{ asset('public/assets/admin/img/picture.svg') }}">
                                             </div>
                                             <!-- Upload box -->
-                                            <div class="d-flex justify-content-center mb-2" id="pdf-container">
+                                            <div class="d-flex justify-content-center" id="pdf-container">
                                                 <div class="document-upload-wrapper" id="doc-upload-wrapper">
-                                                    <input type="file" name="tin_certificate_image" class="document_input" accept=".doc, .pdf, .jpg, .png, .jpeg" data-max-size="2mb" >
+                                                    <input type="file" name="tin_certificate_image" class="document_input" accept=".doc, .pdf, .jpg, .png, .jpeg">
                                                     <div class="textbox">
                                                         <img width="40" height="40" class="svg"
                                                              src="{{ asset('public/assets/admin/img/doc-uploaded.png') }}"
                                                              alt="">
-                                                        <p class="fs-12 mb-0">{{ translate('messages.Select_a_file_or') }} <span class="font-semibold">{{ translate('messages.Drag & Drop') }}</span>
-                                                            {{ translate('messages.here') }}</p>
+                                                        <p class="fs-12 mb-0">Select a file or <span class="font-semibold">Drag & Drop</span>
+                                                            here</p>
                                                     </div>
                                                 </div>
                                             </div>

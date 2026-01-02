@@ -63,14 +63,14 @@
                         <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                     </li>
 
-                    <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/parcel/orders/*') ||Request::is('admin/parcel/details/*')   ? 'active' : '' }}">
+                    <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/parcel/orders/*')  ? 'active' : '' }}">
                         <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" title="{{ translate('messages.orders') }}">
                             <i class="tio-shopping-cart nav-icon"></i>
                             <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
                                 {{ translate('messages.orders') }}
                             </span>
                         </a>
-                        <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:{{ Request::is('admin/parcel/orders/*') ||Request::is('admin/parcel/details/*')  || Request::is('admin/order/offline/payment/list*')? 'block' : 'none' }}">
+                        <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:{{ Request::is('admin/parcel/orders/*') || Request::is('admin/order/offline/payment/list*')? 'block' : 'none' }}">
                             <li class="nav-item {{ Request::is('admin/parcel/orders/all') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('admin.parcel.orders', ['all']) }}" title="{{ translate('messages.all_orders') }}">
                                     <span class="tio-circle nav-indicator-icon"></span>
@@ -82,7 +82,17 @@
                                     </span>
                                 </a>
                             </li>
-
+                            {{-- <li class="nav-item {{ Request::is('admin/parcel/orders/scheduled') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ route('admin.parcel.orders', ['scheduled']) }}" title="{{ translate('messages.scheduled_orders') }}">
+                                    <span class="tio-circle nav-indicator-icon"></span>
+                                    <span class="text-truncate sidebar--badge-container">
+                                        {{ translate('messages.scheduled') }}
+                                        <span class="badge badge-soft-info badge-pill ml-1">
+                                            {{ \App\Models\Order::Scheduled()->ParcelOrder()->module(Config::get('module.current_module_id'))->count() }}
+                                        </span>
+                                    </span>
+                                </a>
+                            </li> --}}
                             <li class="nav-item {{ Request::is('admin/parcel/orders/pending') ? 'active' : '' }}">
                                 <a class="nav-link " href="{{ route('admin.parcel.orders', ['pending']) }}" title="{{ translate('messages.pending_orders') }}">
                                     <span class="tio-circle nav-indicator-icon"></span>
@@ -161,7 +171,17 @@
                                     </span>
                                 </a>
                             </li>
-
+                            {{-- <li class="nav-item {{ Request::is('admin/parcel/orders/refunded') ? 'active' : '' }}">
+                                <a class="nav-link " href="{{ route('admin.parcel.orders', ['refunded']) }}" title="{{ translate('messages.refunded_orders') }}">
+                                    <span class="tio-circle nav-indicator-icon"></span>
+                                    <span class="text-truncate sidebar--badge-container">
+                                        {{ translate('messages.refunded') }}
+                                        <span class="badge badge-soft-danger bg-light badge-pill ml-1">
+                                            {{ \App\Models\Order::Refunded()->ParcelOrder()->module(Config::get('module.current_module_id'))->count() }}
+                                        </span>
+                                    </span>
+                                </a>
+                            </li> --}}
 
                             <li class="nav-item {{ Request::is('admin/order/offline/payment/list*') ? 'active' : '' }}">
                                 <a class="nav-link " href="{{ route('admin.order.offline_verification_list', ['all']) }}" title="{{ translate('Offline_Payments') }}">
@@ -263,44 +283,15 @@
                     </li>
 
                     @if (\App\CentralLogics\Helpers::module_permission_check('parcel'))
-
-
-
-
-
-                <li class="navbar-vertical-aside-has-menu @yield('parcel_settings') @yield('parcel_cancellation')">
-                        <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" title="{{ translate('delivery_Settings') }}">
+                    <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/parcel/settings') ? 'active' : '' }}">
+                        <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.parcel.settings') }}" title="{{ translate('messages.delivery_setup') }}">
                             <i class="tio-settings nav-icon"></i>
                             <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                {{ translate('delivery_Settings') }}
+                                {{ translate('messages.delivery_setup') }}
                             </span>
                         </a>
-                        <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="{{ Request::is('admin/parcel/settings*') || Request::is('admin/parcel/cancellation-settings') ? 'display-block' : 'display-none' }}">
-
-                            <li class="nav-item @yield('parcel_settings')">
-                                <a class="nav-link " href="{{ route('admin.parcel.settings') }}" title="{{ translate('Parcel Settings') }}">
-                                    <span class="tio-circle nav-indicator-icon"></span>
-                                    <span class="text-truncate sidebar--badge-container">
-                                        {{translate('Parcel Settings')}}
-
-                                    </span>
-                                </a>
-                            </li>
-                            <li class="nav-item @yield('parcel_cancellation')">
-                                <a class="nav-link " href="{{ route('admin.parcel.cancellationSettings') }}" title="{{ translate('Cancellation_Setup') }}">
-                                    <span class="tio-circle nav-indicator-icon"></span>
-                                    <span class="text-truncate sidebar--badge-container">
-                                        {{ translate('Cancellation_Setup') }}
-
-                                    </span>
-                                </a>
-                            </li>
-                        </ul>
                     </li>
- @endif
-
-
-
+                    @endif
                     <!--End Product Section -->
 
 

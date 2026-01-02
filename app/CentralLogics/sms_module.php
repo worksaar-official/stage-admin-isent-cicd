@@ -91,25 +91,18 @@ class SMS_module
         }
         return $response;
     }
-        public static function two_factor($receiver, $otp): string
+
+    public static function two_factor($receiver, $otp): string
     {
         $config = self::get_settings('2factor');
         $response = 'error';
-
         if (isset($config) && $config['status'] == 1) {
             $api_key = $config['api_key'];
-            $otp_template = $config['otp_template'] ?? 'Your OTP is: #OTP#';
-
-            $apiUrl = sprintf(
-                'https://2factor.in/API/V1/%s/SMS/%s/%s/%s',
-                urlencode($api_key),
-                urlencode($receiver),
-                urlencode($otp),
-                urlencode($otp_template)
-            );
+            $otp_template = $config['otp_template']  ?? 'Your OTP is: #OTP#';
+            $apiUrl = "https://2factor.in/API/V1/$api_key/SMS/$receiver/$otp/$otp_template";
 
             $curl = curl_init();
-            curl_setopt_array($curl, [
+            curl_setopt_array($curl, array(
                 CURLOPT_URL => $apiUrl,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => "",
@@ -117,22 +110,19 @@ class SMS_module
                 CURLOPT_TIMEOUT => 30,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => "GET",
-            ]);
-
+            ));
             $response = curl_exec($curl);
             $err = curl_error($curl);
             curl_close($curl);
 
-            if ($err) {
-                $response = $err;
-            } else {
+            if (!$err) {
                 $response = 'success';
+            } else {
+                $response = 'error';
             }
         }
-
         return $response;
     }
-
 
     public static function msg_91($receiver, $otp): string
     {

@@ -3,9 +3,7 @@
 <?php
     $landing_site_direction = session()->get('landing_site_direction');
     $country=\App\Models\BusinessSetting::where('key','country')->first();
-    $countryCode= strtolower($country?$country->value:'auto');
-   $metaData=  \App\Models\DataSetting::where('type','admin_landing_page')->whereIn('key',['meta_title','meta_description','meta_image'])->get()->keyBy('key')??[];
-    $icon = \App\Models\BusinessSetting::where(['key' => 'icon'])->first();
+$countryCode= strtolower($country?$country->value:'auto');
 ?>
 <html dir="{{ $landing_site_direction }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -13,8 +11,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@yield('title')</title>
-    @include('layouts.landing._seo')
 
     <link rel="stylesheet" href="{{ asset('public/assets/landing/css/bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('public/assets/landing/css/customize-animate.css') }}" />
@@ -25,7 +23,7 @@
 
     <link rel="stylesheet" href="{{asset('public/assets/admin/intltelinput/css/intlTelInput.css')}}">
 
-
+    @php($icon = \App\Models\BusinessSetting::where(['key' => 'icon'])->first())
     <link rel="icon" type="image/x-icon" href="{{\App\CentralLogics\Helpers::get_full_url('business', $icon?->value?? '', $icon?->storage[0]?->value ?? 'public','favicon')}}">
     @stack('css_or_js')
     @php($backgroundChange = \App\Models\BusinessSetting::where(['key' => 'backgroundChange'])->first())
@@ -186,7 +184,7 @@
                         <form method="post" action="{{route('newsletter.subscribe')}}">
                             @csrf
                             <div class="input--grp">
-                                <input type="email" name="email" required class="form-control" placeholder="{{ translate('Enter your email address') }}">
+                                <input type="email" name="email" required class="form-control" placeholder="Enter your email address">
                                 <button class="search-btn" type="submit">
                                     <svg width="46" height="46" viewBox="0 0 46 46" fill="none"
                                         xmlns="http://www.w3.org/2000/svg">

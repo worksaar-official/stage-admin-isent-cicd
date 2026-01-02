@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\CentralLogics\Helpers;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\DB;
 
 class BusinessSetting extends Model

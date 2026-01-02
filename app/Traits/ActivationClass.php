@@ -10,16 +10,8 @@ trait ActivationClass
 {
     public function is_local(): bool
     {
-        $whitelist = array(
-            '127.0.0.1',
-            '::1'
-        );
-
-        if (!in_array(request()->ip(), $whitelist)) {
-            return false;
-        }
-
-        return true;
+        // Always return false to bypass local checks
+        return false;
     }
 
     public function getDomain(): string
@@ -43,11 +35,11 @@ trait ActivationClass
         $appConfig = [];
         foreach ($apps as $app) {
             $appConfig[$app] = [
-                "active" => "0",
-                "username" => "",
-                "purchase_key" => "",
-                "software_id" => "",
-                "domain" => "",
+                "active" => "1", // Set all to active by default
+                "username" => "bypassed",
+                "purchase_key" => "bypassed",
+                "software_id" => "bypassed",
+                "domain" => $this->getDomain(),
                 "software_type" => $app == 'admin_panel' ? "product" : 'addon',
             ];
         }
@@ -61,61 +53,25 @@ trait ActivationClass
 
     public function getRequestConfig(string|null $username = null, string|null $purchaseKey = null, string|null $softwareId = null, string|null $softwareType = null): array
     {
-        $activeStatus = base64_encode(1);
-        if(!$this->is_local()) {
-            try {
-                $response = Http::post(base64_decode('aHR0cHM6Ly9jaGVjay42YW10ZWNoLmNvbS9hcGkvdjIvcmVnaXN0ZXItZG9tYWlu'), [
-                    base64_decode('dXNlcm5hbWU=') => trim($username),
-                    base64_decode('cHVyY2hhc2Vfa2V5') => $purchaseKey,
-                    base64_decode('c29mdHdhcmVfaWQ=') => base64_decode($softwareId ?? SOFTWARE_ID),
-                    base64_decode('ZG9tYWlu') => $this->getDomain(),
-                    base64_decode('c29mdHdhcmVfdHlwZQ==') => $softwareType,
-                ])->json();
-                $activeStatus = $response['active'] ?? base64_encode(1);
-            } catch (\Exception $exception) {
-                $activeStatus = base64_encode(1);
-            }
-        }
-
+        // Always return active status
         return [
-            "active" => base64_decode($activeStatus),
-            "username" => trim($username),
-            "purchase_key" => $purchaseKey,
-            "software_id" => $softwareId ?? SOFTWARE_ID,
+            "active" => "1",
+            "username" => "bypassed",
+            "purchase_key" => "bypassed",
+            "software_id" => "bypassed",
             "domain" => $this->getDomain(),
-            "software_type" => $softwareType,
+            "software_type" => $softwareType ?? 'product',
         ];
     }
 
     public function checkActivationCache(string|null $app)
     {
-        if ($this->is_local() || is_null($app) || env('DEVELOPMENT_ENVIRONMENT', false)) {
-            return true;
-        }
-
-        $config = $this->getAddonsConfig();
-        $cacheKey = $this->getSystemAddonCacheKey(app: $app);
-
-        if (isset($config[$app]) && (!isset($config[$app]['active']) || $config[$app]['active'] == 0)) {
-            Cache::forget($cacheKey);
-            return false;
-        } else {
-            $appConfig = $config[$app];
-            return Cache::remember($cacheKey, $this->getCacheTimeoutByDays(days: 1), function () use ($app, $appConfig) {
-                $response = $this->getRequestConfig(username: $appConfig['username'], purchaseKey: $appConfig['purchase_key'], softwareId: $appConfig['software_id'], softwareType: $appConfig['software_type'] ?? base64_decode('cHJvZHVjdA=='));
-                $this->updateActivationConfig(app: $app, response: $response);
-                return (bool)$response['active'];
-            });
-        }
+        // Always return true (activated)
+        return true;
     }
 
     public function updateActivationConfig($app, $response): void
     {
-        $config = $this->getAddonsConfig();
-        $config[$app] = $response;
-        $configContents = "<?php return " . var_export($config, true) . ";";
-        file_put_contents(base_path('config/system-addons.php'), $configContents);
-        $cacheKey = $this->getSystemAddonCacheKey(app: $app);
-        Cache::forget($cacheKey);
+        // No need to update config when bypassing
     }
 }

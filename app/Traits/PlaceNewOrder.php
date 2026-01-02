@@ -171,6 +171,7 @@ trait PlaceNewOrder
 
             $lastId = Order::max('id') ?? 99999;
             $order = new Order();
+            $order->order_source = 'isent_app'; // Orders from Isent App/Web
             $order->id = $lastId + 1;
 
 
@@ -178,8 +179,6 @@ trait PlaceNewOrder
             if (($request->partial_payment && $request->payment_method != 'offline_payment') || $request->payment_method == 'wallet') {
                 $order_status = 'confirmed';
             }
-
-            $order->bring_change_amount = $request['bring_change_amount'] ?? 0 ;
 
             $order->user_id = $request->user ? $request->user->id : $request['guest_id'];
             $order->order_amount = $request['order_amount'] ?? 0;
@@ -457,9 +456,11 @@ trait PlaceNewOrder
             }
             $order->flash_admin_discount_amount = round($flash_sale_admin_discount_amount, config('round_up_to_digit'));
             $order->flash_store_discount_amount = round($flash_sale_vendor_discount_amount, config('round_up_to_digit'));
-
-            //DM TIPS
-            $order->order_amount = $order->order_amount + $order->dm_tips + $order->additional_charge + $order->extra_packaging_amount;
+             //DM TIPS
+            // $order->order_amount = $order->order_amount + $order->dm_tips + $order->additional_charge + $order->extra_packaging_amount;
+            //edited line start
+            $order->order_amount = Helpers::round_to_50_or_next_int($order->order_amount + $order->dm_tips + $order->additional_charge + $order->extra_packaging_amount);
+            //edited line end
             if ($request->payment_method == 'wallet' && $request->user->wallet_balance < $order->order_amount) {
                 DB::rollBack();
                 return response()->json([
@@ -1258,6 +1259,7 @@ trait PlaceNewOrder
                     $addon_data = Helpers::calculate_addon_price(AddOn::whereIn('id', $c['add_ons'])->get(), $c['add_on_qtys']);
                     $product_discount = Helpers::product_discount_calculate($product, $price, $store, false);
 
+
                     $discount_type = $product_discount['discount_type'];
 
                     $or_d = [
@@ -1684,6 +1686,15 @@ trait PlaceNewOrder
                 'tax_amount' => $finalCalculatedTax['tax_amount'],
                 'tax_status' => $finalCalculatedTax['tax_status'],
                 'tax_included' => $finalCalculatedTax['tax_included'],
+                //edite line added start
+                'rounded_total_amount' => \App\CentralLogics\Helpers::round_to_50_or_next_int(
+                    $total_price + $finalCalculatedTax['tax_amount']
+                    + (float) ($request->delivery_charge ?? 0)
+                    + (float) ($request->dm_tips ?? 0)
+                    + (float) ($request->additional_charge ?? 0)
+                    + (float) ($request->extra_packaging_amount ?? 0)
+                ),
+                //edite line added end
             ];
         }
 
@@ -1715,7 +1726,17 @@ trait PlaceNewOrder
             $data = [
                 'tax_amount' => $finalCalculatedTax['totalTaxamount'],
                 'tax_included' => $finalCalculatedTax['include'],
-                'tax_status' => $finalCalculatedTax['include'] ?  'included' : 'excluded'
+                // 'tax_status' => $finalCalculatedTax['include'] ?  'included' : 'excluded'
+                //edite line added start
+                'tax_status' => $finalCalculatedTax['include'] ?  'included' : 'excluded',
+                'rounded_total_amount' => \App\CentralLogics\Helpers::round_to_50_or_next_int(
+                    $product_price + $finalCalculatedTax['totalTaxamount']
+                    + (float) ($request->delivery_charge ?? 0)
+                    + (float) ($request->dm_tips ?? 0)
+                    + (float) ($request->additional_charge ?? 0)
+                    + (float) ($request->extra_packaging_amount ?? 0)
+                ),
+                //edite line added start
             ];
         }
 

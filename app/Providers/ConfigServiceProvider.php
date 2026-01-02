@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use Carbon\Carbon;
+use App\Models\Module;
 use App\Models\Setting;
 use App\Models\BusinessSetting;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
-
 Carbon::setWeekStartsAt(Carbon::MONDAY);
 Carbon::setWeekEndsAt(Carbon::SUNDAY);
 class ConfigServiceProvider extends ServiceProvider
@@ -35,7 +37,7 @@ class ConfigServiceProvider extends ServiceProvider
             $emailServices = json_decode($data['value'], true);
             if ($emailServices) {
                 $config = array(
-                    'status' => (bool)(isset($emailServices['status']) ? $emailServices['status'] : 1),
+                    'status' => (Boolean)(isset($emailServices['status'])?$emailServices['status']:1),
                     'driver' => $emailServices['driver'],
                     'host' => $emailServices['host'],
                     'port' => $emailServices['port'],
@@ -49,30 +51,28 @@ class ConfigServiceProvider extends ServiceProvider
                 Config::set('mail', $config);
             }
 
-            $gateway =
-                [
-                    'paytm',
-                    'razor_pay',
-                    'flutterwave',
-                    'paypal',
-                    'ssl_commerz',
-                    'paystack'
-                ];
+            $gateway=
+            [ 'paytm',
+            'razor_pay',
+            'flutterwave',
+            'paypal',
+            'ssl_commerz',
+            'paystack' ];
 
-            $data = Setting::whereIn('key_name', $gateway)->pluck('live_values', 'key_name')->toArray();
+            $data= Setting::whereIn('key_name',$gateway)->pluck('live_values','key_name')->toArray();
             if (isset($data['paystack'])) {
                 $config = array(
-                    'publicKey' => env('PAYSTACK_PUBLIC_KEY', data_get($data, 'paystack.public_key', null)),
-                    'secretKey' => env('PAYSTACK_SECRET_KEY', data_get($data, 'paystack.secret_key', null)),
-                    'paymentUrl' => env('PAYSTACK_PAYMENT_URL', data_get($data, 'paystack.callback_url', null)),
-                    'merchantEmail' => env('MERCHANT_EMAIL', data_get($data, 'paystack.merchant_email', null)),
+                    'publicKey' => env('PAYSTACK_PUBLIC_KEY',data_get($data,'paystack.public_key',null)),
+                    'secretKey' => env('PAYSTACK_SECRET_KEY', data_get($data,'paystack.secret_key',null)),
+                    'paymentUrl' => env('PAYSTACK_PAYMENT_URL',data_get($data,'paystack.callback_url',null)),
+                    'merchantEmail' => env('MERCHANT_EMAIL', data_get($data,'paystack.merchant_email',null)),
                 );
                 Config::set('paystack', $config);
             }
 
 
-            if (data_get($data, 'ssl_commerz', null)) {
-                if (data_get($data, 'ssl_commerz.mode', null) == 'live') {
+            if (data_get($data,'ssl_commerz',null)) {
+                if ( data_get($data,'ssl_commerz.mode',null) == 'live') {
                     $url = "https://securepay.sslcommerz.com";
                     $host = false;
                 } else {
@@ -83,8 +83,8 @@ class ConfigServiceProvider extends ServiceProvider
                     'projectPath' => env('PROJECT_PATH'),
                     'apiDomain' => env("API_DOMAIN_URL", $url),
                     'apiCredentials' => [
-                        'store_id' => data_get($data, 'ssl_commerz.store_id', null),
-                        'store_password' => data_get($data, 'ssl_commerz.store_password', null),
+                        'store_id' => data_get($data,'ssl_commerz.store_id',null),
+                        'store_password' => data_get($data,'ssl_commerz.store_password',null),
                     ],
                     'apiUrl' => [
                         'make_payment' => "/gwprocess/v4/api.php",
@@ -102,15 +102,15 @@ class ConfigServiceProvider extends ServiceProvider
                 Config::set('sslcommerz', $config);
             }
 
-            if (data_get($data, 'paypal', null)) {
-                if (data_get($data, 'paypal.mode', null) == 'live') {
+            if (data_get($data,'paypal',null)) {
+                if (data_get($data,'paypal.mode',null) == 'live') {
                     $paypal_mode = "live";
                 } else {
                     $paypal_mode = "sandbox";
                 }
                 $config = array(
-                    'client_id' => data_get($data, 'paypal.client_id', null), // values : (local | production)
-                    'secret' => data_get($data, 'paypal.client_secret', null),
+                    'client_id' => data_get($data,'paypal.client_id',null), // values : (local | production)
+                    'secret' => data_get($data,'paypal.client_secret',null),
                     'settings' => array(
                         'mode' => env('PAYPAL_MODE', $paypal_mode), //live||sandbox
                         'http.ConnectionTimeOut' => 30,
@@ -122,36 +122,36 @@ class ConfigServiceProvider extends ServiceProvider
                 Config::set('paypal', $config);
             }
 
-            if (data_get($data, 'flutterwave', null)) {
+            if (data_get($data,'flutterwave',null)) {
                 $config = array(
-                    'publicKey' => env('FLW_PUBLIC_KEY', data_get($data, 'flutterwave.public_key', null)), // values : (local | production)
-                    'secretKey' => env('FLW_SECRET_KEY', data_get($data, 'flutterwave.secret_key', null)),
-                    'secretHash' => env('FLW_SECRET_HASH', data_get($data, 'flutterwave.hash', null)),
+                    'publicKey' => env('FLW_PUBLIC_KEY',data_get($data,'flutterwave.public_key',null)), // values : (local | production)
+                    'secretKey' => env('FLW_SECRET_KEY', data_get($data,'flutterwave.secret_key',null)),
+                    'secretHash' => env('FLW_SECRET_HASH', data_get($data,'flutterwave.hash',null)),
                 );
                 Config::set('flutterwave', $config);
             }
 
-            if (data_get($data, 'razor_pay', null)) {
+            if (data_get($data,'razor_pay',null)) {
                 $config = array(
-                    'razor_key' => env('RAZOR_KEY', data_get($data, 'razor_pay.api_key', null)),
-                    'razor_secret' => env('RAZOR_SECRET', data_get($data, 'razor_pay.api_secret', null))
+                    'razor_key' => env('RAZOR_KEY', data_get($data,'razor_pay.api_key',null)),
+                    'razor_secret' => env('RAZOR_SECRET', data_get($data,'razor_pay.api_secret',null))
                 );
                 Config::set('razor', $config);
             }
 
-            if (data_get($data, 'paytm', null)) {
-                $PAYTM_STATUS_QUERY_NEW_URL = 'https://securegw-stage.paytm.in/merchant-status/getTxnStatus';
-                $PAYTM_TXN_URL = 'https://securegw-stage.paytm.in/theia/processTransaction';
-                if (data_get($data, 'paytm.mode', null) == 'live') {
-                    $PAYTM_STATUS_QUERY_NEW_URL = 'https://securegw.paytm.in/merchant-status/getTxnStatus';
-                    $PAYTM_TXN_URL = 'https://securegw.paytm.in/theia/processTransaction';
+            if (data_get($data,'paytm',null)) {
+                $PAYTM_STATUS_QUERY_NEW_URL='https://securegw-stage.paytm.in/merchant-status/getTxnStatus';
+                $PAYTM_TXN_URL='https://securegw-stage.paytm.in/theia/processTransaction';
+                if (data_get($data,'paytm.mode',null) == 'live') {
+                    $PAYTM_STATUS_QUERY_NEW_URL='https://securegw.paytm.in/merchant-status/getTxnStatus';
+                    $PAYTM_TXN_URL='https://securegw.paytm.in/theia/processTransaction';
                 }
                 $config = array(
-                    'PAYTM_ENVIRONMENT' => ($mode == 'live') ? 'PROD' : 'TEST',
-                    'PAYTM_MERCHANT_KEY' => env('PAYTM_MERCHANT_KEY', data_get($data, 'paytm.merchant_key', null)),
-                    'PAYTM_MERCHANT_MID' => env('PAYTM_MERCHANT_MID', data_get($data, 'paytm.merchant_id', null)),
-                    'PAYTM_MERCHANT_WEBSITE' => env('PAYTM_MERCHANT_WEBSITE', data_get($data, 'paytm.merchant_website_link', null)),
-                    'PAYTM_REFUND_URL' => env('PAYTM_REFUND_URL', data_get($data, 'paytm.paytm_refund_url', null)),
+                    'PAYTM_ENVIRONMENT' => ($mode=='live')?'PROD':'TEST',
+                    'PAYTM_MERCHANT_KEY' => env('PAYTM_MERCHANT_KEY',data_get($data,'paytm.merchant_key',null)),
+                    'PAYTM_MERCHANT_MID' => env('PAYTM_MERCHANT_MID', data_get($data,'paytm.merchant_id',null)),
+                    'PAYTM_MERCHANT_WEBSITE' => env('PAYTM_MERCHANT_WEBSITE', data_get($data,'paytm.merchant_website_link',null)),
+                    'PAYTM_REFUND_URL' => env('PAYTM_REFUND_URL', data_get($data,'paytm.paytm_refund_url',null)),
                     'PAYTM_STATUS_QUERY_URL' => env('PAYTM_STATUS_QUERY_URL', $PAYTM_STATUS_QUERY_NEW_URL),
                     'PAYTM_STATUS_QUERY_NEW_URL' => env('PAYTM_STATUS_QUERY_NEW_URL', $PAYTM_STATUS_QUERY_NEW_URL),
                     'PAYTM_TXN_URL' => env('PAYTM_TXN_URL', $PAYTM_TXN_URL),
@@ -204,33 +204,36 @@ class ConfigServiceProvider extends ServiceProvider
             $timeformat = BusinessSetting::where(['key' => 'timeformat'])->first();
             if ($timeformat && $timeformat->value == '12') {
                 Config::set('timeformat', 'h:i:a');
-            } else {
+            }
+            else{
                 Config::set('timeformat', 'H:i');
             }
 
             $canceled_by_store = BusinessSetting::where(['key' => 'canceled_by_store'])->first();
             if ($canceled_by_store) {
-                Config::set('canceled_by_store', (bool)$canceled_by_store->value);
+                Config::set('canceled_by_store', (boolean)$canceled_by_store->value);
             }
 
             $canceled_by_deliveryman = BusinessSetting::where(['key' => 'canceled_by_deliveryman'])->first();
             if ($canceled_by_deliveryman) {
-                Config::set('canceled_by_deliveryman', (bool)$canceled_by_deliveryman->value);
+                Config::set('canceled_by_deliveryman', (boolean)$canceled_by_deliveryman->value);
             }
 
-            $toggle_veg_non_veg = (bool)BusinessSetting::where(['key' => 'toggle_veg_non_veg'])->first()->value;
-            if ($toggle_veg_non_veg) {
+            $toggle_veg_non_veg = (boolean)BusinessSetting::where(['key' => 'toggle_veg_non_veg'])->first()->value;
+            if($toggle_veg_non_veg)
+            {
                 Config::set('toggle_veg_non_veg', $toggle_veg_non_veg);
-            } else {
+            }
+            else{
                 Config::set('toggle_veg_non_veg', false);
             }
 
             $data = BusinessSetting::where(['key' => 's3_credential'])->first();
-            $credentials = null;
-            if ($data?->value) {
+            $credentials= null;
+            if($data?->value){
                 $credentials = json_decode($data['value'], true);
             }
-            $config = (bool)BusinessSetting::where(['key' => 'local_storage'])->first()?->value;
+            $config = (boolean)BusinessSetting::where(['key' => 'local_storage'])->first()?->value;
             if ($credentials) {
                 Config::set('filesystems.default', $config ? ($config == 0 ? 's3' : 'local') : 'local');
                 Config::set('filesystems.disks.s3.key', $credentials['key']);
@@ -241,14 +244,7 @@ class ConfigServiceProvider extends ServiceProvider
                 Config::set('filesystems.disks.s3.endpoint', $credentials['end_point']);
             }
 
-            $openAi = BusinessSetting::where(['key' => 'openai_config'])->first();
-            $openAi =  $openAi ? json_decode($openAi['value'], true) : null;
-            if ($openAi) {
-                Config::set('openai.api_key', $openAi['OPENAI_API_KEY']);
-                Config::set('openai.organization', $openAi['OPENAI_ORGANIZATION']);
-            }
-        } catch (\Exception $exception) {
-            info([$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
+        } catch (\Exception $ex) {
         }
     }
 }

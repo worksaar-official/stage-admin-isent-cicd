@@ -1,0 +1,25 @@
+on:
+ push:
+   branches:
+     - main
+
+
+name: 🚀 Deploy isent admin on push
+
+
+jobs:
+ web-deploy:
+   name: 🎉 Deploy
+   runs-on: ubuntu-latest
+   steps:
+     - name: 🚚 Get latest code
+       uses: actions/checkout@v2.3.2
+    
+     - name: 📂 Sync files
+       uses: SamKirkland/FTP-Deploy-Action@4.0.0
+       with:
+         server: 69.62.78.80
+         username: dev_admin_ftp
+         password: 3Ba3yxaxRkoDTuisywCD
+         port: 21
+         server-dir: /

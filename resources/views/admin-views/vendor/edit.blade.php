@@ -26,7 +26,7 @@
         @php($language = $language->value ?? null)
         @php($defaultLang = 'en')
         <!-- End Page Header -->
-        <form action="{{route('admin.store.update',[$store['id']])}}" method="post" class="custom-validation"
+        <form action="{{route('admin.store.update',[$store['id']])}}" method="post" class="js-validate"
                 enctype="multipart/form-data" id="vendor_form">
             @csrf
 
@@ -53,7 +53,7 @@
                             @if ($language)
                             <div class="lang_form"
                             id="default-form">
-                                <div class="form-group error-wrapper">
+                                <div class="form-group">
                                     <label class="input-label"
                                         for="default_name">{{ translate('messages.name') }}
                                         ({{ translate('messages.Default') }})
@@ -62,15 +62,22 @@
                                         class="form-control" placeholder="{{ translate('messages.store_name') }}" value="{{$store->getRawOriginal('name')}}"
                                         required
                                          >
-
-
+                                </div>
+								<div class="form-group">
+                                    <label class="input-label"
+                                        for="store_code">{{ translate('messages.store_code') }}
+                                        ({{ translate('messages.Default') }})
+                                    </label>
+                                    <input type="text" name="store_code" id="store_code"
+                                        class="form-control" placeholder="{{ translate('messages.enter_store_code') }}" value="{{$store->store_code}}"
+                                        required
+                                         >
                                 </div>
                                 <input type="hidden" name="lang[]" value="default">
-                                <div class="form-group mb-0 error-wrapper">
+                                <div class="form-group mb-0">
                                     <label class="input-label"
                                         for="exampleFormControlInput1">{{ translate('messages.address') }} ({{ translate('messages.default') }})</label>
                                     <textarea type="text" name="address[]" placeholder="{{translate('messages.store')}}" class="form-control min-h-90px ckeditor">{{$store->getRawOriginal('address')}}</textarea>
-
                                 </div>
                             </div>
                                 @foreach (json_decode($language) as $lang)
@@ -90,7 +97,7 @@
                                 ?>
                                     <div class="d-none lang_form"
                                         id="{{ $lang }}-form">
-                                        <div class="form-group error-wrapper">
+                                        <div class="form-group">
                                             <label class="input-label"
                                                 for="{{ $lang }}_name">{{ translate('messages.name') }}
                                                 ({{ strtoupper($lang) }})
@@ -98,33 +105,29 @@
                                             <input type="text" name="name[]" id="{{ $lang }}_name"
                                                 class="form-control" value="{{ $translate[$lang]['name']??'' }}" placeholder="{{ translate('messages.store_name') }}"
                                                  >
-
                                         </div>
                                         <input type="hidden" name="lang[]" value="{{ $lang }}">
-                                        <div class="form-group mb-0 error-wrapper">
+                                        <div class="form-group mb-0">
                                             <label class="input-label"
                                                 for="exampleFormControlInput1">{{ translate('messages.address') }} ({{ strtoupper($lang) }})</label>
                                             <textarea type="text" name="address[]" placeholder="{{translate('messages.store')}}" class="form-control min-h-90px ckeditor">{{ $translate[$lang]['address']??'' }}</textarea>
-
                                         </div>
                                     </div>
                                 @endforeach
                             @else
                                 <div id="default-form">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.name') }} ({{ translate('messages.default') }})</label>
                                         <input type="text" name="name[]" class="form-control"
                                             placeholder="{{ translate('messages.store_name') }}" required>
-
                                     </div>
                                     <input type="hidden" name="lang[]" value="default">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.address') }}
                                         </label>
                                         <textarea type="text" name="address[]" placeholder="{{translate('messages.store')}}" class="form-control min-h-90px ckeditor"></textarea>
-
                                     </div>
                                 </div>
                             @endif
@@ -141,7 +144,7 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex flex-wrap flex-sm-nowrap __gap-12px">
-                                <div class="__custom-upload-img mr-lg-5 error-wrapper">
+                                <div class="__custom-upload-img mr-lg-5">
                                     @php($logo = \App\Models\BusinessSetting::where('key', 'logo')->first())
                                     @php($logo = $logo->value ?? '')
                                     <label class="form-label">
@@ -150,20 +153,19 @@
                                     <label class="text-center position-relative">
                                         <img class="img--110 min-height-170px min-width-170px onerror-image image--border" id="viewer"
                                         data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                        src="{{ $store->logo_full_url ?? asset('public/assets/admin/img/upload-img.png') }}" data-max-size="2mb"
+                                        src="{{ $store->logo_full_url ?? asset('public/assets/admin/img/upload-img.png') }}"
                                             alt="logo image" />
                                         <div class="icon-file-group">
                                             <div class="icon-file">
                                                 <i class="tio-edit"></i>
                                         <input type="file" name="logo" id="customFileEg1" class="custom-file-input"
-                                        accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
+                                        accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
                                             </div>
                                         </div>
                                     </label>
-
                                 </div>
 
-                                <div class="__custom-upload-img error-wrapper">
+                                <div class="__custom-upload-img">
                                     @php($icon = \App\Models\BusinessSetting::where('key', 'icon')->first())
                                     @php($icon = $icon->value ?? '')
                                     <label class="form-label">
@@ -178,11 +180,10 @@
                                             <div class="icon-file">
                                                 <i class="tio-edit"></i>
                                                 <input type="file" name="cover_photo" id="coverImageUpload"  class="custom-file-input"
-                                                    accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" data-max-size="2mb">
+                                                    accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
                                             </div>
                                         </div>
                                     </label>
-
                                 </div>
                             </div>
                         </div>
@@ -201,29 +202,24 @@
                                 <div class="col-md-12">
                                     <div class="position-relative">
                                         <label class="input-label" for="tax">{{translate('Estimated Delivery Time ( Min & Maximum Time)')}}</label>
-                                         <div class="error-wrapper">
-                                            <input type="text" id="time_view" value="{{$delivery_time_start}} to {{$delivery_time_end}} {{$delivery_time_type}}" class="form-control" readonly required>
-
-                                        </div>
+                                        <input type="text" id="time_view" value="{{$delivery_time_start}} to {{$delivery_time_end}} {{$delivery_time_type}}" class="form-control" readonly>
                                         <a href="javascript:void(0)" class="floating-date-toggler">&nbsp;</a>
                                         <span class="offcanvas"></span>
                                         <div class="floating--date" id="floating--date">
                                             <div class="card shadow--card-2">
                                                 <div class="card-body">
                                                     <div class="floating--date-inner">
-                                                        <div class="item error-wrapper">
+                                                        <div class="item">
                                                             <label class="input-label"
                                                                 for="minimum_delivery_time">{{ translate('Minimum Time') }}</label>
                                                             <input id="minimum_delivery_time" type="number" name="minimum_delivery_time" value="{{$delivery_time_start}}" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} 30"
                                                                 pattern="^[0-9]{2}$" required value="{{ old('minimum_delivery_time') }}">
-
                                                         </div>
-                                                        <div class="item error-wrapper">
+                                                        <div class="item">
                                                             <label class="input-label"
                                                                 for="maximum_delivery_time">{{ translate('Maximum Time') }}</label>
                                                             <input id="maximum_delivery_time" type="number" name="maximum_delivery_time" value="{{$delivery_time_end}}" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} 60"
                                                                 pattern="[0-9]{2}" required value="{{ old('maximum_delivery_time') }}">
-
                                                         </div>
                                                         <div class="item smaller">
                                                             <select name="delivery_time_type" id="delivery_time_type" class="custom-select">
@@ -244,14 +240,10 @@
                             </div>
                             <div class="row g-3 my-0">
                                 <div class="col-lg-4">
-                                    <div class="form-group error-wrapper">
-                                        <label class="input-label" for="choice_zones">{{translate('messages.zone')}}
-                                            <span
+                                    <div class="form-group">
+                                        <label class="input-label" for="choice_zones">{{translate('messages.zone')}}<span
                                                 class="form-label-secondary" data-toggle="tooltip" data-placement="right"
-                                                    data-original-title="{{translate('messages.select_zone_for_map')}}">
-                                                    <img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.select_zone_for_map')}}">
-                                            </span>
-                                        </label>
+        data-original-title="{{translate('messages.select_zone_for_map')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.select_zone_for_map')}}"></span></label>
                                         <select name="zone_id" id="choice_zones" data-placeholder="{{translate('messages.select_zone')}}"
                                                 class="form-control js-select2-custom get_zone_data">
                                             @foreach(\App\Models\Zone::active()->get() as $zone)
@@ -265,7 +257,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="latitude">{{translate('messages.latitude')}}
                                             <span
                                                 class="form-label-secondary" data-toggle="tooltip" data-placement="right"
@@ -276,9 +268,8 @@
                                         <input type="text" id="latitude"
                                                 name="latitude" class="form-control"
                                                 placeholder="{{ translate('messages.Ex:') }} -94.22213" value="{{$store->latitude}}" required readonly>
-
                                     </div>
-                                    <div class="form-group mb-5 error-wrapper">
+                                    <div class="form-group mb-5">
                                         <label class="input-label" for="longitude">{{translate('messages.longitude')}}
                                             <span
                                                 class="form-label-secondary" data-toggle="tooltip" data-placement="right"
@@ -289,7 +280,6 @@
                                         <input type="text"
                                                 name="longitude" class="form-control"
                                                 placeholder="{{ translate('messages.Ex:') }} 103.344322" id="longitude" value="{{$store->longitude}}" required readonly>
-
                                     </div>
                                 </div>
                                 <div class="col-lg-8">
@@ -312,28 +302,25 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="f_name">{{translate('messages.first_name')}}</label>
                                         <input type="text" name="f_name" class="form-control" placeholder="{{translate('messages.first_name')}}"
                                                 value="{{$store->vendor->f_name}}"  required>
-
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="l_name">{{translate('messages.last_name')}}</label>
                                         <input type="text" name="l_name" class="form-control" placeholder="{{translate('messages.last_name')}}"
                                         value="{{$store->vendor->l_name}}"  required>
-
                                     </div>
                                 </div>
-                                <div class="col-md-4 col-sm-6 error-wrapper">
+                                <div class="col-md-4 col-sm-6">
                                     <div class="form-group mb-0">
                                         <label class="input-label" for="phone">{{translate('messages.phone')}}</label>
                                         <input type="tel" id="phone" name="phone" class="form-control"
                                         placeholder="{{ translate('messages.Ex:') }} 017********" value="{{$store->vendor->phone}}"
                                         required>
-
                                     </div>
                                 </div>
                             </div>
@@ -351,14 +338,13 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="form-group mb-0 error-wrapper">
+                                    <div class="form-group mb-0">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.email')}}</label>
                                         <input type="email" name="email" class="form-control" placeholder="{{ translate('messages.Ex:') }} ex@example.com" value="{{$store->email}}" required>
-
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="js-form-message form-group mb-0 error-wrapper">
+                                    <div class="js-form-message form-group mb-0">
                                         <label class="input-label" for="signupSrPassword">{{ translate('password') }}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right"
                                  data-original-title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span></label>
 
@@ -379,32 +365,44 @@
                                                 </a>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-sm-6">
-                                    <div class="js-form-message form-group mb-0 error-wrapper">
+                                    <div class="js-form-message form-group mb-0">
                                         <label class="input-label" for="signupSrConfirmPassword">{{ translate('messages.Confirm Password') }}</label>
 
                                         <div class="input-group input-group-merge">
-                                            <input type="password" class="js-toggle-password form-control" name="confirmPassword" id="signupSrConfirmPassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
-                                            placeholder="{{ translate('messages.password_length_placeholder', ['length' => '8+']) }}"
-                                            aria-label="8+ characters required"                                      data-msg="Password does not match the confirm password."
-                                                    data-hs-toggle-password-options='{
-                                                    "target": [".js-toggle-password-target-1", ".js-toggle-password-target-2"],
-                                                    "defaultClass": "tio-hidden-outlined",
-                                                    "showClass": "tio-visible-outlined",
-                                                    "classChangeTarget": ".js-toggle-passowrd-show-icon-2"
-                                                    }'>
-                                            <div class="js-toggle-password-target-2 input-group-append">
-                                                <a class="input-group-text" href="javascript:;">
-                                                <i class="js-toggle-passowrd-show-icon-2 tio-visible-outlined"></i>
-                                                </a>
-                                            </div>
+                                        <input type="password" class="js-toggle-password form-control" name="confirmPassword" id="signupSrConfirmPassword" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                        placeholder="{{ translate('messages.password_length_placeholder', ['length' => '8+']) }}"
+                                        aria-label="8+ characters required"                                      data-msg="Password does not match the confirm password."
+                                                data-hs-toggle-password-options='{
+                                                "target": [".js-toggle-password-target-1", ".js-toggle-password-target-2"],
+                                                "defaultClass": "tio-hidden-outlined",
+                                                "showClass": "tio-visible-outlined",
+                                                "classChangeTarget": ".js-toggle-passowrd-show-icon-2"
+                                                }'>
+                                        <div class="js-toggle-password-target-2 input-group-append">
+                                            <a class="input-group-text" href="javascript:;">
+                                            <i class="js-toggle-passowrd-show-icon-2 tio-visible-outlined"></i>
+                                            </a>
                                         </div>
-
+                                        </div>
                                     </div>
                                 </div>
+
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="api_key">{{translate('API Key')}}</label>
+                                        <input type="text" name="api_key" class="form-control" placeholder="{{ translate('messages.Ex:') }} abc123xyz" value="{{$store->api_key}}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="webhook_url">{{translate('Webhook URL')}}</label>
+                                        <input type="url" name="webhook_url" class="form-control" placeholder="{{ translate('messages.Ex:') }} https://example.com/webhook" value="{{$store->webhook_url}}">
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -419,14 +417,14 @@
                             <div class="row g-3">
                                 <div class="col-md-8 col-xxl-9">
                                     <div class="bg--secondary rounded p-20 h-100">
-                                        <div class="form-group error-wrapper">
-                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Taxpayer Identification Number(TIN)')}} </label>
+                                        <div class="form-group">
+                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Taxpayer Identification Number(TIN)')}} <span class="text-danger">*</span></label>
                                             <input type="text" name="tin" placeholder="{{translate('Type Your Taxpayer Identification Number(TIN)')}}" class="form-control"
-                                                   value="{{$store->tin}}" >
+                                                   value="{{$store->tin}}"  required>
                                         </div>
-                                        <div class="form-group mb-0 error-wrapper">
-                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Expire Date')}} </label>
-                                            <input type="date" name="tin_expire_date" class="form-control" value="{{$store->tin_expire_date}}"  >
+                                        <div class="form-group mb-0">
+                                            <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Expire Date')}} <span class="text-danger">*</span></label>
+                                            <input type="date" name="tin_expire_date" class="form-control" value="{{$store->tin_expire_date}}" required>
                                         </div>
                                     </div>
                                 </div>
@@ -443,7 +441,7 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="error-wrapper">
+                                        <div>
                                             <div id="file-assets"
                                                  data-picture-icon="{{ asset('public/assets/admin/img/picture.svg') }}"
                                                  data-document-icon="{{ asset('public/assets/admin/img/document.svg') }}"
@@ -457,8 +455,8 @@
                                                         <img width="40" height="40" class="svg"
                                                              src="{{ asset('public/assets/admin/img/doc-uploaded.png') }}"
                                                              alt="">
-                                                        <p class="fs-12 mb-0">{{ translate('messages.Select_a_file_or') }} <span class="font-semibold">{{ translate('messages.Drag & Drop') }}</span>
-                                                            {{ translate('messages.here') }}</p>
+                                                        <p class="fs-12 mb-0">Select a file or <span class="font-semibold">Drag & Drop</span>
+                                                            here</p>
                                                     </div>
                                                 </div>
                                                 <div class="pdf-single" data-file-name="${file.name}" data-file-url="{{ $store->tin_certificate_image_full_url ?? asset('public/assets/admin/img/upload-cloud.png') }}">
@@ -478,13 +476,12 @@
                                                             @endif
                                                             <div class="file-name-wrapper">
                                                                 <span class="file-name js-filename-truncate">{{ $store->tin_certificate_image }}</span>
-                                                                <span class="opacity-50">{{ translate('Click to view the file') }}</span>
+                                                                <span class="opacity-50">Click to view the file</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
@@ -492,13 +489,10 @@
                         </div>
                     </div>
                 </div>
-                @if (request()->pending == 1)
-                <input type="hidden" name="approve_vendor" value="1">
-                @endif
                 <div class="col-lg-12">
                     <div class="btn--container justify-content-end">
                         <button type="reset" id="reset_btn" class="btn btn--reset">{{translate('messages.reset')}}</button>
-                        <button type="submit" class="btn btn--primary">{{ request()->pending == 1 ? translate('Update_&_Approve') : translate('messages.submit')}}</button>
+                        <button type="submit" class="btn btn--primary">{{translate('messages.submit')}}</button>
                     </div>
                 </div>
             </div>

@@ -12,6 +12,7 @@ use App\Models\Vendor;
 use App\Models\Message;
 use App\Models\UserInfo;
 use App\Scopes\StoreScope;
+use App\Models\AdminWallet;
 use App\Models\DataSetting;
 use App\Models\StoreConfig;
 use App\Models\StoreWallet;
@@ -40,6 +41,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Modules\Rental\Entities\TripTransaction;
 use Rap2hpoutre\FastExcel\FastExcel;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Exports\DisbursementHistoryExport;
@@ -66,6 +68,7 @@ class VendorController extends Controller
             'l_name' => 'nullable|max:100',
             'name.0' => 'required',
             'name.*' => 'max:191',
+			'store_code' => 'required|unique:stores',
             'address' => 'required|max:1000',
             'latitude' => 'required',
             'longitude' => 'required',
@@ -81,7 +84,11 @@ class VendorController extends Controller
                     }
                 },],
             'zone_id' => 'required',
+            // 'module_id' => 'required',
             'logo' => 'required',
+            'tin' => 'required',
+            'tin_expire_date' => 'required',
+            'tin_certificate_image' => 'required',
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
             'name.0.required'=>translate('default_name_is_required'),
@@ -136,8 +143,11 @@ class VendorController extends Controller
         $store->tin_expire_date = $request->tin_expire_date;
         $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
         $store->tin_certificate_image = Helpers::upload('store/', $extension, $request->file('tin_certificate_image'));
+        $store->api_key = $request->api_key;
+        $store->webhook_url = $request->webhook_url;
         $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
         $store->module_id = Config::get('module.current_module_id');
+		$store->store_code = $request->store_code;
         try {
             $store->save();
             // $store->module->increment('stores_count');
@@ -218,11 +228,14 @@ class VendorController extends Controller
             'f_name' => 'required|max:100',
             'l_name' => 'nullable|max:100',
             'name' => 'required|max:191',
+			'store_code' => 'required|unique:stores,store_code,'.$store->id,
             'email' => 'required|unique:vendors,email,'.$store->vendor->id,
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:20|unique:vendors,phone,'.$store->vendor->id,
             'zone_id'=>'required',
             'latitude' => 'required',
             'longitude' => 'required',
+            'tin' => 'required',
+            'tin_expire_date' => 'required',
             'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised(),function ($attribute, $value, $fail) {
                 if (strpos($value, ' ') !== false) {
                     $fail('The :attribute cannot contain white spaces.');
@@ -284,12 +297,63 @@ class VendorController extends Controller
         $store->tin_expire_date = $request->tin_expire_date;
         $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
         $store->tin_certificate_image = $request->has('tin_certificate_image') ? Helpers::update('store/', $store->tin_certificate_image, $extension, $request->file('tin_certificate_image')) : $store->tin_certificate_image;
+        $store->api_key = $request->api_key;
+        $store->webhook_url = $request->webhook_url;
         $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
+		$store->store_code = $request->store_code;
         $store->save();
+        $default_lang = str_replace('_', '-', app()->getLocale());
+        foreach($request->lang as $index=>$key)
+        {
+            if($default_lang == $key && !($request->name[$index])){
+                if ($key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'name'
+                        ],
+                        ['value' => $store->name]
+                    );
+                }
+            }else{
 
-        Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);
-        Helpers::add_or_update_translations(request: $request, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store->id, data_value: $store->address);
+                if ($request->name[$index] && $key != 'default') {
+                    Translation::updateOrInsert(
+                        ['translationable_type'  => 'App\Models\Store',
+                            'translationable_id'    => $store->id,
+                            'locale'                => $key,
+                            'key'                   => 'name'],
+                        ['value'                 => $request->name[$index]]
+                    );
+                }
+            }
+            if($default_lang == $key && !($request->address[$index])){
+                if ($key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'address'
+                        ],
+                        ['value' => $store->address]
+                    );
+                }
+            }else{
 
+                if ($request->address[$index] && $key != 'default') {
+                    Translation::updateOrInsert(
+                        ['translationable_type'  => 'App\Models\Store',
+                            'translationable_id'    => $store->id,
+                            'locale'                => $key,
+                            'key'                   => 'address'],
+                        ['value'                 => $request->address[$index]]
+                    );
+                }
+            }
+        }
         if ($vendor->userinfo) {
             $userinfo = $vendor->userinfo;
             $userinfo->f_name = $store->name;
@@ -298,16 +362,7 @@ class VendorController extends Controller
             $userinfo->image = $store->logo;
             $userinfo->save();
         }
-
-
         Toastr::success(translate('messages.store_updated_successfully'));
-        if($request->approve_vendor == 1){
-            $request->merge([
-                'status' => 1,
-                'id' => $store->id,
-            ]);
-            $this->updateVendorApplication($request);
-        }
         return redirect('admin/store/list');
     }
 
@@ -383,11 +438,6 @@ class VendorController extends Controller
         }
         if($tab == 'settings')
         {
-            if($store->module->module_type == 'ecommerce' && !StoreSchedule::where('store_id', $store->id)->exists())
-            {
-                StoreLogic::insert_schedule($store->id);
-            }
-
             return view('admin-views.vendor.view.settings', compact('store'));
         }
         else if($tab == 'order')
@@ -606,13 +656,15 @@ class VendorController extends Controller
                             $q->orWhere('f_name', 'like', "%{$value}%")
                                 ->orWhere('l_name', 'like', "%{$value}%")
                                 ->orWhere('email', 'like', "%{$value}%")
-                                ->orWhere('phone', 'like', "%{$value}%");
+                                ->orWhere('phone', 'like', "%{$value}%")
+                                ->orWhere('store_code', 'like', "%{$value}%");
                         }
                     });
                 })->orWhere(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%")
                             ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('store_code', 'like', "%{$value}%")
                             ->orWhere('phone', 'like', "%{$value}%");
                     }
                 });
@@ -1078,50 +1130,41 @@ class VendorController extends Controller
 
     public function update_application(Request $request)
     {
-        $this->updateVendorApplication($request);
+        $store = Store::findOrFail($request->id);
+        $store->vendor->status = $request->status;
+        $store->vendor->save();
+        if($request->status) $store->status = 1;
+
+        $add_days= 1;
+        if($store?->store_sub_update_application){
+            if($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1){
+                $add_days= BusinessSetting::where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
+            }elseif($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0){
+                $add_days=$store?->store_sub_update_application->validity;
+            }
+                $store?->store_sub_update_application->update([
+                    'expiry_date'=> Carbon::now()->addDays($add_days)->format('Y-m-d'),
+                    'status'=>1
+                ]);
+            $store->store_business_model= 'subscription';
+        }
+        $store->save();
+        try{
+            if($request->status==1){
+                if ( config('mail.status') && Helpers::get_mail_status('approve_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_approval','mail_status')) {
+                    Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('approved', $store->vendor->f_name.' '.$store->vendor->l_name));
+                }
+            }else{
+                if ( config('mail.status') &&  Helpers::get_mail_status('deny_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_deny','mail_status')) {
+                    Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('denied', $store->vendor->f_name.' '.$store->vendor->l_name));
+                }
+            }
+        }catch(\Exception $ex){
+            info($ex->getMessage());
+        }
         Toastr::success(translate('messages.application_status_updated_successfully'));
-        return redirect(route('admin.store.pending-requests'));
+        return back();
     }
-
-
-
-    private function updateVendorApplication($request){
-            $store = Store::findOrFail($request->id);
-            $store->vendor->status = $request->status;
-            $store->vendor->rejection_note = $request->rejection_note;
-            $store->vendor->save();
-            if($request->status) $store->status = 1;
-
-            $add_days= 1;
-            if($store?->store_sub_update_application){
-                if($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1){
-                    $add_days= BusinessSetting::where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
-                }elseif($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0){
-                    $add_days=$store?->store_sub_update_application->validity;
-                }
-                    $store?->store_sub_update_application->update([
-                        'expiry_date'=> Carbon::now()->addDays($add_days)->format('Y-m-d'),
-                        'status'=>1
-                    ]);
-                $store->store_business_model= 'subscription';
-            }
-            $store->save();
-            try{
-                if($request->status==1){
-                    if ( config('mail.status') && Helpers::get_mail_status('approve_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_approval','mail_status')) {
-                        Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('approved', $store->vendor->f_name.' '.$store->vendor->l_name));
-                    }
-                }else{
-                    if ( config('mail.status') &&  Helpers::get_mail_status('deny_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_deny','mail_status')) {
-                        Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('denied', $store->vendor->f_name.' '.$store->vendor->l_name));
-                    }
-                }
-            }catch(\Exception $ex){
-                info($ex->getMessage());
-            }
-            return true;
-    }
-
 
     public function cleardiscount(Store $store)
     {
