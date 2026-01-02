@@ -69,6 +69,7 @@ class Zone extends Model
         'cash_on_delivery' => 'boolean',
         'digital_payment' => 'boolean',
         'offline_payment' => 'boolean',
+        'fixed_shipping_charge' => 'float',
         'coordinates' => Polygon::class,
     ];
 

@@ -2,7 +2,7 @@
     <div id="printableArea">
         <div>
             <div class="text-center">
-                <input type="button" class="btn btn-primary mt-3 non-printable" onclick="printDiv('printableArea')"
+                <input type="button" class="btn btn-primary mt-3 print-Div non-printable" onclick="printDiv('printableArea')"
                     value="{{ translate('Proceed,_If_thermal_printer_is_ready.') }}" />
                 <a href="{{ url()->previous() }}"
                     class="btn btn-danger non-printable mt-3">{{ translate('messages.back') }}</a>
@@ -168,20 +168,27 @@
                                                         @endif
                                                     @endforeach
                                                 @endif
-                                            @else
-                                                @if (count(json_decode($detail['variation'], true)) > 0)
-                                                    <strong><u>Variation : </u></strong>
-                                                    @foreach (json_decode($detail['variation'], true)[0] as $key1 => $variation)
-                                                        @if ($key1 != 'stock')
-                                                            <div class="font-size-sm text-body">
-                                                                <span>{{ $key1 }} : </span>
-                                                                <span
-                                                                    class="font-weight-bold">{{ $key1 == 'price' ? \App\CentralLogics\Helpers::format_currency($variation) : $variation }}</span>
-                                                            </div>
-                                                        @endif
-                                                    @endforeach
-                                                @endif
-                                            @endif
+                                             @else
+                                                                    @if (count(json_decode($detail['variation'], true)) > 0)
+                                                                        <strong><u>{{ translate('messages.variation') }}
+                                                                                :
+                                                                            </u></strong>
+                                                                    <?php
+                                                                        $detailsVariation = isset(json_decode($detail['variation'], true)[0]) ? json_decode($detail['variation'], true)[0] : json_decode($detail['variation'], true);
+                                                                    ?>
+                                                                        @foreach ($detailsVariation as $key1 => $variation)
+                                                                            @if ($key1 != 'stock' || ($order->store && config('module.' . $order->store->module->module_type)['stock']))
+                                                                                <div class="font-size-sm text-body">
+                                                                                        <span>{{ $key1 }} :
+                                                                                        </span>
+                                                                                    <span class="font-weight-bold">
+                                                                                        {{ Str::limit(implode(', ', (array) $variation), 15, '...') }}
+                                                                                    </span>
+                                                                                </div>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    @endif
+                                                                @endif
                                             <div class="addons">
                                                 @foreach (json_decode($detail['add_ons'], true) as $key2 => $addon)
                                                     @if ($key2 == 0)

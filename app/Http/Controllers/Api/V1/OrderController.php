@@ -12,6 +12,7 @@ use App\Models\OrderPayment;
 use App\Models\RefundReason;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
+use App\CentralLogics\OrderLogic;
 use App\Models\BusinessSetting;
 use App\Models\CashBackHistory;
 use App\Models\OfflinePayments;
@@ -45,13 +46,13 @@ class OrderController extends Controller
             $request['contact_number'] = '+' . $request['contact_number'];
         }
 
-        $order = Order::with(['store', 'store.store_sub', 'delivery_man.rating', 'parcel_category', 'refund', 'payments'])->withCount('details')
+        $order = Order::with(['store', 'store.store_sub', 'delivery_man.rating', 'parcel_category', 'refund', 'payments','parcelCancellation','reviews'])->withCount('details')
             ->where('id', $request['order_id'])
             ->when($request->user, function ($query) use ($user_id) {
-                return $query->where('user_id', $user_id);
+                return $query->where('user_id', $user_id)->where('is_guest', 0);
             })
             ->when(!$request->user, function ($query) use ($request) {
-                return $query->whereJsonContains('delivery_address->contact_person_number', $request['contact_number']);
+                return $query->whereJsonContains('delivery_address->contact_person_number', $request['contact_number'])->where('is_guest', 1);
             })
             ->Notpos()->first();
         if ($order) {
@@ -89,7 +90,8 @@ class OrderController extends Controller
         }
         $user_id = $request->user ? $request->user->id : $request['guest_id'];
 
-        $paginator = Order::with(['store', 'delivery_man.rating', 'parcel_category', 'refund:order_id,admin_note,customer_note'])->withCount('details')->where(['user_id' => $user_id])->whereIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refund_request_canceled', 'refunded', 'failed'])
+        $paginator = Order::with(['store', 'delivery_man.rating', 'parcel_category', 'refund:order_id,admin_note,customer_note'])->withCount('details')->where(['user_id' => $user_id])
+        ->whereIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refund_request_canceled', 'refunded', 'failed','returned'])
             ->when(isset($request->user), function ($query) {
                 $query->where('is_guest', 0);
             })
@@ -129,7 +131,9 @@ class OrderController extends Controller
             ->when(isset($request->user), function ($query) {
                 $query->where('is_guest', 0);
             })
-            ->withCount('details')->where(['user_id' => $user_id])->whereNotIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refund_request_canceled', 'refunded', 'failed'])->Notpos()->latest()->paginate($request['limit'], ['*'], 'page', $request['offset']);
+            ->withCount('details')
+            ->where(['user_id' => $user_id])->whereNotIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refund_request_canceled', 'refunded', 'failed','returned'])
+            ->Notpos()->latest()->paginate($request['limit'], ['*'], 'page', $request['offset']);
 
         $orders = array_map(function ($data) {
             $data['delivery_address'] = $data['delivery_address'] ? json_decode($data['delivery_address']) : $data['delivery_address'];
@@ -157,7 +161,7 @@ class OrderController extends Controller
         }
         $user_id = $request?->user?->id;
 
-        $order = Order::with('details', 'offline_payments', 'parcel_category')
+        $order = Order::with('details', 'offline_payments', 'parcel_category','parcelCancellation')
             ->when(isset($request->user), function ($query) {
                 $query->where('is_guest', 0);
             })
@@ -188,7 +192,7 @@ class OrderController extends Controller
     public function cancel_order(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'reason' => 'required|max:255',
+            'order_id' => 'required',
             'guest_id' => $request->user ? 'nullable' : 'required',
         ]);
 
@@ -196,6 +200,14 @@ class OrderController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $user_id = $request->user ? $request->user->id : $request['guest_id'];
+
+        if($request->note == null && $request->reason == null) {
+            return response()->json([
+                'errors' => [
+                    ['code' => 'order', 'message' => translate('You Must Enter Note Or Reason')]
+                ]
+            ], 403);
+        }
 
         $order = Order::where(['user_id' => $user_id, 'id' => $request['order_id']])
             ->when(isset($request->user), function ($query) {
@@ -208,6 +220,17 @@ class OrderController extends Controller
                     ['code' => 'order', 'message' => translate('messages.not_found')]
                 ]
             ], 403);
+        } elseif ($order->order_type == 'parcel') {
+            $cancel_parcel_order = OrderLogic::cancelParcelOrder($order, 'customer', $request);
+            if (data_get($cancel_parcel_order, 'status_code') != 200) {
+                return response()->json([
+                    'errors' => [
+                        ['code' => data_get($cancel_parcel_order, 'code'), 'message' => data_get($cancel_parcel_order, 'message')]
+                    ]
+                ], data_get($cancel_parcel_order, 'status_code'));
+            } else {
+                return response()->json(['message' => data_get($cancel_parcel_order, 'message')], 200);
+            }
         } else if ($order->order_status == 'pending' || $order->order_status == 'failed' || $order->order_status == 'canceled') {
             if (config('module.' . $order->module->module_type)['stock']) {
                 foreach ($order->details as $detail) {
@@ -222,9 +245,11 @@ class OrderController extends Controller
             $order->order_status = 'canceled';
             $order->canceled = now();
             $order->cancellation_reason = $request->reason;
+            $order->cancellation_note = $request->note;
             $order->canceled_by = 'customer';
             $order->save();
-            $order?->store ?   Helpers::increment_order_count($order?->store) : '';
+            $order?->store ?
+            Helpers::increment_order_count($order?->store) : '';
 
             Helpers::send_order_notification($order);
             return response()->json(['message' => translate('messages.order_canceled_successfully')], 200);
@@ -534,7 +559,37 @@ class OrderController extends Controller
         $info->status = 'pending';
         $info->save();
 
-        Helpers::send_order_notification($order);
+        if($request->update_payment_info){
+
+            if($order->is_guest){
+                 $user_fcm = $order->guest->fcm_token;
+            }else{
+                 $user_fcm = $order?->customer?->cm_firebase_token;
+            }
+            if (Helpers::getNotificationStatusData('customer','customer_order_notification','push_notification_status') && $user_fcm) {
+                $data = [
+                    'title' => translate('Payment_Info'),
+                    'description' => translate('Your_offline_payment_info_updated_successfully'),
+                    'order_id' => $order->id,
+                    'image' => '',
+                    'type' => 'order_status',
+                ];
+                Helpers::send_push_notif_to_device($user_fcm, $data);
+                DB::table('user_notifications')->insert([
+                    'data' => json_encode($data),
+                    'user_id' => $order->user_id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+
+
+
+        } else {
+            Helpers::send_order_notification($order);
+        }
+
 
         return response()->json(['payment' => 'Payment_Info_Updated_successfully'], 200);
     }
@@ -645,5 +700,40 @@ class OrderController extends Controller
         }
 
         return $this->getSurgePrice($request->zone_id, $request->module_id, $request->date_time);
+    }
+
+
+    public function parcelReturn(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required',
+            'order_status' => 'required|in:returned',
+            'return_otp' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $order = Order::where(['id' => $request->order_id])->with('parcelCancellation')->first();
+
+
+        $validationCheck =  OrderLogic::makeValidationForParcelReturn($request,$order);
+        if (data_get($validationCheck, 'status_code') === 403) {
+
+            return response()->json([
+                'errors' => [
+                    ['code' => data_get($validationCheck, 'code'), 'message' => data_get($validationCheck, 'message')]
+                ]
+            ], data_get($validationCheck, 'status_code'));
+        }
+
+        if( in_array($order->parcelCancellation->cancel_by ,['deliveryman', 'admin_for_deliveryman']  )){
+            OrderLogic::deliveryManCancelParcelTransaction($order,'customer');
+        } else{
+            OrderLogic::create_transaction_parcel_cancel($order, $order->payment_status == 'paid' ? 'admin' : 'deliveryman' );
+        }
+
+        return response()->json(['message' => translate('messages.Parcel_returned_successfully')], 200);
     }
 }

@@ -44,6 +44,18 @@
                     {{translate('Forgot_Password')}}
                 </a>
             </li>
+              <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/dm/withdraw-approve') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['dm','withdraw-approve']) }}">
+                    {{translate('Withdraw_Approval')}}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/dm/withdraw-deny') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['dm','withdraw-deny']) }}">
+                    {{translate('Withdraw_Rejection')}}
+                </a>
+            </li>
         </ul>
         <!-- End Nav -->
     </div>

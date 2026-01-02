@@ -190,7 +190,7 @@
                         <div class="form-group">
                             <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_name') }} <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control h--45px border-0 pl-unset" required
-                                placeholder="Type tax name" value="{{ old('name') }}" maxlength="50">
+                                placeholder="{{ translate('Type tax name') }}" value="{{ old('name') }}" maxlength="50">
                         </div>
                         <div class="form-group mb-0">
                             <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_rate') }} <span class="text-danger">*</span></label>
@@ -198,7 +198,7 @@
                                 <div class="flex-sm-grow-1">
                                     <input type="number" value="{{ old('tax_rate') }}" required name="tax_rate"
                                         min="0.001" step="0.001" max="100"
-                                        class="form-control h--45px border-0 pl-unset" placeholder="Ex: 5">
+                                        class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex: 5') }}">
                                 </div>
                                 <div class="flex-shrink-0">
                                     <span class="input-group-text ltr border-0"> % </span>
@@ -251,7 +251,7 @@
                         <div class="form-group">
                             <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_name') }} <span class="text-danger">*</span></label>
                             <input type="text" name="name" readonly class="form-control h--45px border-0 pl-unset"
-                                placeholder="VAT" id="tax_name">
+                                placeholder="{{ translate('VAT') }}" id="tax_name">
                         </div>
                         <div class="form-group mb-0">
                             <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_rate') }} <span class="text-danger">*</span></label>
@@ -259,7 +259,7 @@
                                 <div class="flex-sm-grow-1">
                                     <input type="number" name="tax_rate" id="tax_rate" required name="tax_rate"
                                         min="0.001" step="0.001" max="100"
-                                        class="form-control h--45px border-0 pl-unset" placeholder="10">
+                                        class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex: 5') }}">
                                 </div>
                                  <div class="flex-shrink-0">
                                     <span class="input-group-text ltr border-0"> % </span>

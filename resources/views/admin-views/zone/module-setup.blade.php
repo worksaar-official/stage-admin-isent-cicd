@@ -42,7 +42,7 @@
                                 @else
                                     <div class="bg--4 px-2 py-2 rounded fz-11  gap-2 align-items-center d-flex ">
                                         <img src="{{ asset('public/assets/admin/img/Icon.svg') }}" alt="">
-                                        
+
                                         <span>
                                             {{ translate('Must select at least one payment method.') }}
                                         </span>
@@ -285,7 +285,7 @@
                                                     value="{{ $pivot?->maximum_shipping_charge }}">
                                             </div>
                                         </div>
-                                        <div class="col-md-6 col-lg-4 distance-charge-field">
+                                        <div class="col-md-6 col-lg-4 ">
                                             <div class="form-group mb-0">
                                                 <label
                                                     class="input-label text-capitalize fs-14 d-flex alig-items-center line--limit-1">

@@ -774,3 +774,68 @@ $(document).on('click', '.tour-guide_btn', function () {
     const $parent = $(this).closest('.toggle-tour');
     $parent.toggleClass('active');
 });
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    // ---- tabindex priority set logic
+    function assignTabIndexes() {
+        document.querySelectorAll("form").forEach((form) => {
+            let tabIndex = 1;
+
+            // Reset old tabindex
+            form.querySelectorAll("[tabindex]").forEach(el => el.removeAttribute("tabindex"));
+
+            form.querySelectorAll("input, textarea, select").forEach((el) => {
+                if (
+                    el.disabled ||
+                    el.type === "hidden" ||
+                    el.hasAttribute("readonly")
+                ) return;
+
+                if (el.classList.contains("ckeditor")) return;
+                if (el.classList.contains("js-select2-custom")) return;
+
+                el.setAttribute("tabindex", tabIndex++);
+            });
+
+            form.querySelectorAll(".select2-selection").forEach((el) => {
+                el.setAttribute("tabindex", tabIndex++);
+            });
+
+            if (typeof CKEDITOR !== "undefined") {
+                Object.values(CKEDITOR.instances).forEach((editor) => {
+                    const editable = editor.editable();
+                    if (editable && editable.$ && form.contains(editable.$)) {
+                        editable.$.setAttribute("tabindex", tabIndex++);
+                    }
+                });
+            }
+        });
+    }
+
+    assignTabIndexes();
+
+    const observer = new MutationObserver(() => {
+        assignTabIndexes();
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    // ---- tabindex priority set logic ends
+});
+function initCharCounter(selector = '.char-counter') {
+    $(selector).each(function () {
+        const $input = $(this);
+        const maxLength = $input.attr('maxlength');
+        const target = $input.data('target');
+        const $counter = $(target);
+        if (!maxLength || !$counter.length) return;
+        $input.on('input', function () {
+            const currentLength = $input.val().length;
+            $counter.text(`${currentLength}/${maxLength}`);
+        }).trigger('input');
+    });
+}
+

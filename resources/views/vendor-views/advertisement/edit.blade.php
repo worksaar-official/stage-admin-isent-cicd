@@ -210,7 +210,7 @@ active
                             <br>
                             <label class="form-label">{{ translate('Upload Related Files') }}</label>
                             <div class="d-flex flex-wrap flex-sm-nowrap justify-content-center gap-3 border rounded p-3">
-                                <div class="d-flex flex-column align-items-center gap-3">
+                                <div class="d-flex flex-column align-items-center gap-3 flex-shrink-0">
                                     <p class="title-color mb-0">{{ translate('Profile Image') }} <span class="text-danger">({{ translate('Ratio - 1:1') }})</span></p>
 
                                     <div class="upload-file">
@@ -237,7 +237,7 @@ active
                                         <input type="file" class="cover_attachment js-upload-input"
                                             data-target="main-image" name="cover_image"
                                             accept=".webp, .png,.jpg,.jpeg,.gif, |image/*">
-                                        <div class="upload-file__img upload-file__img_banner">
+                                        <div class="upload-file__img upload-file__img_banner aspect-2-1">
                                             <img src="{{ $advertisement?->cover_image_full_url }}" data-src="{{asset('public/assets/admin/img/media/banner-upload-file.png')}}" alt="" >
                                         </div>
                                         <button class="remove-file-button" type="button">

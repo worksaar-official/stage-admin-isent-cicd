@@ -621,8 +621,8 @@
                                                 {{ $tz ? ($tz == 'Asia/Calcutta' ? 'selected' : '') : '' }}>
                                                 (GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi</option>
                                             <!-- <option value="Asia/Calcutta"  {{ $tz ? ($tz == 'Asia/Calcutta' ? 'selected' : '') : '' }}>(GMT+05:30) Sri Jayawardenapura</option> -->
-                                            <option value="Asia/Katmandu"
-                                                {{ $tz ? ($tz == 'Asia/Katmandu' ? 'selected' : '') : '' }}>
+                                            <option value="Asia/Kathmandu"
+                                                {{ $tz ? ($tz == 'Asia/Kathmandu' ? 'selected' : '') : '' }}>
                                                 (GMT+05:45) Kathmandu</option>
                                             <option value="Asia/Almaty"
                                                 {{ $tz ? ($tz == 'Asia/Almaty' ? 'selected' : '') : '' }}>(GMT+06:00)Almaty, Novosibirsk</option>
@@ -1302,7 +1302,7 @@
                                     </div>
                                 </div>
                             </div>
-    
+
 
                             <div class="__bg-F8F9FC-card p-0 mt-4">
                                 <div class="border-bottom p-3">

@@ -28,12 +28,26 @@
                         <div class="col-sm-6 col-lg-4">
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="item_section">
-                                <span class="pr-2">{{translate('messages.manage_item_setup')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_disabled,_item_management_feature_will_be_hidden_from_store_panel_&_store_app')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.show_hide_food_menu')}}"></span></span>
-                                    <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->item_section?0:1, 'item_section'])}}"  name="item_section" id="item_section" {{$store->item_section?'checked':''}}>
+                                <span class="pr-2">{{translate('messages.manage_item_setup')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_disabled,_item_management_feature_will_be_hidden_from_vendor_panel_&_store_app')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.show_hide_food_menu')}}"></span></span>
+                                    <input type="checkbox"
+                                            data-id="item_section"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="item_section"
+
+                                       {{$store->item_section?'checked':''}}>
                                     <span class="toggle-switch-label text">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                <form action="{{route('admin.store.toggle-settings',[$store->id,$store->item_section?0:1, 'item_section'])}}"  method="get" id="item_section_form">
+                                </form>
                             </div>
                         </div>
                         @if ($store->store_business_model == 'commission')
@@ -41,23 +55,53 @@
                         <div class="col-sm-6 col-lg-4">
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="reviews_section">
-                                <span class="pr-2">{{translate('messages.Show_Reviews_In_Store_Panel')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_enabled,_store_owners_can_see_customer_feedback_in_the_store_panel_&_store_app.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.show_hide_food_menu')}}"></span> </span>
-                                    <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->reviews_section?0:1, 'reviews_section'])}}"  name="reviews_section" id="reviews_section" {{$store->reviews_section?'checked':''}}>
+                                <span class="pr-2">{{translate('messages.Show_Reviews_In_Vendor_Panel')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_enabled,_store_owners_can_see_customer_feedback_in_the_Vendor_panel_&_store_app.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.show_hide_food_menu')}}"></span> </span>
+                                    <input type="checkbox"
+                                         data-id="reviews_section"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="reviews_section"
+
+                                       {{$store->reviews_section?'checked':''}}>
                                     <span class="toggle-switch-label text">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                <form action="{{route('admin.store.toggle-settings',[$store->id,$store->reviews_section?0:1, 'reviews_section'])}}"  method="get" id="reviews_section_form">
+                                </form>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="pos_system">
-                                <span class="pr-2 text-capitalize">{{translate('messages.include_POS_in_store_panel')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('Enable_or_Disable_Point_of_Sale_(POS)_in_the_store_panel.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.pos_system_hint')}}"></span></span>
-                                    <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->pos_system?0:1, 'pos_system'])}}"  id="pos_system" {{$store->pos_system?'checked':''}}>
+                                <span class="pr-2 text-capitalize">{{translate('messages.include_POS_in_vendor_panel')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('Enable_or_Disable_Point_of_Sale_(POS)_in_the_store_panel.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.pos_system_hint')}}"></span></span>
+                                    <input type="checkbox"
+                                            data-id="pos_system"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="pos_system"
+
+
+                                    {{$store->pos_system?'checked':''}}>
+
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                 <form action="{{route('admin.store.toggle-settings',[$store->id,$store->pos_system?0:1, 'pos_system'])}}"  method="get" id="pos_system_form">
+                                </form>
                             </div>
                         </div>
                         @endif
@@ -66,11 +110,24 @@
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="schedule_order">
                                 <span class="pr-2">{{translate('messages.scheduled_order')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_enabled,_store_owner_can_take_scheduled_orders_from_customers.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.scheduled_order_hint')}}"></span></span>
-                                    <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->schedule_order?0:1, 'schedule_order'])}}"  id="schedule_order" {{$store->schedule_order?'checked':''}}>
+                                    <input type="checkbox"
+                                      data-id="schedule_order"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="schedule_order"
+                                    {{$store->schedule_order?'checked':''}}>
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                 <form action="{{route('admin.store.toggle-settings',[$store->id,$store->schedule_order?0:1, 'schedule_order'])}}"  method="get" id="schedule_order_form">
+                                     </form>
                             </div>
                         </div>
                         @if ($store->store_business_model == 'commission')
@@ -79,11 +136,25 @@
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="self_delivery_system">
                                 <span class="pr-2 text-capitalize">{{translate('Store-managed_Delivery')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_this_option_is_enabled,_stores_must_deliver_orders_using_their_own_deliverymen._Plus,_stores_will_get_the_option_to_add_their_own_deliverymen_from_the_store_panel.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.self_delivery_hint')}}"></span></span>
-                                    <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->self_delivery_system?0:1, 'self_delivery_system'])}}"  id="self_delivery_system" {{$store->self_delivery_system?'checked':''}}>
+                                    <input type="checkbox"
+                                            data-id="self_delivery_system"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="self_delivery_system"
+
+                                      {{$store->self_delivery_system?'checked':''}}>
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                 <form action="{{route('admin.store.toggle-settings',[$store->id,$store->self_delivery_system?0:1, 'self_delivery_system'])}}"  method="get" id="self_delivery_system_form">
+                                     </form>
                             </div>
                         </div>
                         @endif
@@ -91,22 +162,50 @@
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="delivery">
                                     <span class="pr-2">{{translate('messages.home_delivery')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_enabled,_customers_can_make_home_delivery_orders_from_this_store.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.home_delivery_hint')}}"></span></span>
-                                    <input type="checkbox" name="delivery" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->delivery?0:1, 'delivery'])}}"  id="delivery" {{$store->delivery?'checked':''}}>
+                                    <input type="checkbox"
+
+                                            data-id="delivery"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="delivery"
+                                   {{$store->delivery?'checked':''}}>
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+
+                                 <form action="{{route('admin.store.toggle-settings',[$store->id,$store->delivery?0:1, 'delivery'])}}"  method="get" id="delivery_form">
+                                     </form>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
                             <div class="form-group mb-0">
                                 <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="take_away">
                                 <span class="pr-2 text-capitalize">{{translate('messages.takeaway')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('When_enabled,_customers_can_place_takeaway_orders_from_this_store.')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.take_away_hint')}}"></span></span>
-                                    <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->take_away?0:1, 'take_away'])}}"  id="take_away" {{$store->take_away?'checked':''}}>
+                                    <input type="checkbox"
+
+                                         data-id="take_away"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+                                           id="take_away" {{$store->take_away?'checked':''}}>
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                  <form action="{{route('admin.store.toggle-settings',[$store->id,$store->take_away?0:1, 'take_away'])}}"  method="get" id="take_away_form">
+                                     </form>
                             </div>
                         </div>
                         @if ($store->module->module_type == 'grocery' || $store->module->module_type == 'food')
@@ -128,12 +227,12 @@
                                     <input type="checkbox"
                                            data-id="halal_tag_status"
                                            data-type="status"
-                                           data-image-on="{{ asset('/public/assets/admin/img/modal/schedule-on.png') }}"
-                                           data-image-off="{{ asset('/public/assets/admin/img/modal/schedule-off.png') }}"
-                                           data-title-on="{{ translate('Want_to_enable_halal_tag_status_for_this_store?') }}"
-                                           data-title-off="{{ translate('Want_to_disable_halal_tag_status_for_this_store?') }}"
-                                           data-text-on="<p>{{ translate('If_enabled,_customers_can_see_halal_tag_on_product') }}"
-                                           data-text-off="<p>{{ translate('If_disabled,_customers_can_not_see_halal_tag_on_product.') }}</p>"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
                                            class="toggle-switch-input dynamic-checkbox"
                                            id="halal_tag_status" {{$store->storeConfig?->halal_tag_status == 1?'checked':''}}>
                                     <span class="toggle-switch-label">
@@ -155,11 +254,27 @@
                                     <div class="form-group mb-0">
                                         <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control" for="prescription_order">
                                         <span class="pr-2 text-capitalize">{{translate('messages.prescription_order')}}<span class="input-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{translate('messages.prescription_order_hint')}}"><img src="{{asset('/public/assets/admin/img/info-circle.svg')}}" alt="{{translate('messages.prescription_order_hint')}}"></span></span>
-                                            <input type="checkbox" class="toggle-switch-input redirect-url" data-url="{{route('admin.store.toggle-settings',[$store->id,$store->prescription_order?0:1, 'prescription_order'])}}"  id="prescription_order" {{$store->prescription_order?'checked':''}}>
+                                            <input type="checkbox"
+                                            data-id="prescription_order"
+                                           data-type="status"
+                                           data-image-on="{{ asset('/public/assets/admin/img/status-ons.png') }}"
+                                           data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                           data-title-on="{{ translate('Are you want to turn on ?') }}"
+                                           data-title-off="{{ translate('Are you want to turn off ?') }}"
+                                           data-text-on="<p>{{ translate('This will enable the feature for the vendor.') }}"
+                                           data-text-off="<p>{{ translate('This will disable the feature for the vendor.') }}</p>"
+                                           class="toggle-switch-input dynamic-checkbox"
+
+                                            id="prescription_order"
+
+
+                                              {{$store->prescription_order?'checked':''}}>
                                             <span class="toggle-switch-label">
                                                 <span class="toggle-switch-indicator"></span>
                                             </span>
                                         </label>
+                                        <form  action="{{route('admin.store.toggle-settings',[$store->id,$store->prescription_order?0:1, 'prescription_order'])}}"  method="get"  id="prescription_order_form">
+                                </form>
                                     </div>
                                 </div>
                             @endif
@@ -220,7 +335,7 @@
                                         </select>
                                     </div>
                                 </div>
-                          
+
 
 
                                 <div class="col-12">

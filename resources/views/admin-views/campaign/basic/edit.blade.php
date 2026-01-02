@@ -22,11 +22,8 @@
         <!-- End Page Header -->
         <div class="card">
             <div class="card-body">
-                <form action="{{route('admin.campaign.update-basic',[$campaign['id']])}}" method="post"
-                id=campaign-form
-                      enctype="multipart/form-data">
-                      @csrf
-                      @php($language=\App\Models\BusinessSetting::where('key','language')->first())
+                <form class="custom-validation" data-ajax="true" id=campaign-form enctype="multipart/form-data">
+                    @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
                     @php($defaultLang = str_replace('_', '-', app()->getLocale()))
                     @if($language)
@@ -45,14 +42,14 @@
                             @endforeach
                         </ul>
                         <div class="lang_form" id="default-form">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="default_title">{{translate('messages.title')}} ({{translate('messages.default')}})</label>
-                                <input type="text" name="title[]" id="default_title" class="form-control" placeholder="{{translate('messages.new_campaign')}}" value="{{$campaign?->getRawOriginal('title')}}">
+                                <input type="text" name="title[]" id="default_title" class="form-control" placeholder="{{translate('messages.new_campaign')}}" value="{{$campaign?->getRawOriginal('title')}}" required>
                             </div>
                             <input type="hidden" name="lang[]" value="default">
-                            <div class="form-group">
+                            <div class="form-group error-wrapper">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.short_description')}} ({{translate('messages.default')}})</label>
-                                <textarea type="text" name="description[]" class="form-control ckeditor">{!! $campaign?->getRawOriginal('description') !!}</textarea>
+                                <textarea type="text" name="description[]" class="form-control ckeditor" required>{!! $campaign?->getRawOriginal('description') !!}</textarea>
                             </div>
                         </div>
                         @foreach(json_decode($language) as $lang)
@@ -71,12 +68,12 @@
                                 }
                             ?>
                             <div class="d-none lang_form" id="{{$lang}}-form">
-                                <div class="form-group">
+                                <div class="form-group error-wrapper">
                                     <label class="input-label" for="{{$lang}}_title">{{translate('messages.title')}} ({{strtoupper($lang)}})</label>
                                     <input type="text" name="title[]" id="{{$lang}}_title" class="form-control" placeholder="{{translate('messages.new_campaign')}}" value="{{$translate[$lang]['title']??''}}">
                                 </div>
                                 <input type="hidden" name="lang[]" value="{{$lang}}">
-                                <div class="form-group">
+                                <div class="form-group error-wrapper">
                                     <label class="input-label" for="exampleFormControlInput1">{{translate('messages.short_description')}} ({{strtoupper($lang)}})</label>
                                     <textarea type="text" name="description[]" class="form-control ckeditor">{!! $translate[$lang]['description']??'' !!}</textarea>
                                 </div>
@@ -84,12 +81,12 @@
                         @endforeach
                     @else
                     <div id="default-form">
-                        <div class="form-group">
+                        <div class="form-group error-wrapper">
                             <label class="input-label" for="exampleFormControlInput1">{{translate('messages.title')}} ({{ translate('messages.default') }})</label>
                             <input type="text" name="title[]" class="form-control" placeholder="{{translate('messages.new_campaign')}}" value="{{$campaign['title']}}" maxlength="100">
                         </div>
                         <input type="hidden" name="lang[]" value="en">
-                        <div class="form-group">
+                        <div class="form-group error-wrapper">
                             <label class="input-label" for="exampleFormControlInput1">{{translate('messages.short_description')}}</label>
                             <textarea type="text" name="description[]" class="form-control ckeditor" maxlength="255">{!! $campaign['description'] !!}</textarea>
                         </div>
@@ -100,44 +97,50 @@
                             <div class="row g-3">
                         
                                 <div class="col-sm-6">
-                                    <div>
+                                    <div class="error-wrapper">
                                         <label class="input-label" for="title">{{translate('messages.start_date')}}</label>
                                         <input type="date" id="date_from" class="form-control" required name="start_date" value="{{$campaign->start_date->format('Y-m-d')}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <label class="input-label" for="title">{{translate('messages.end_date')}}</label>
-                                    <input type="date" id="date_to" class="form-control" required="" name="end_date" value="{{$campaign->end_date->format('Y-m-d')}}">
+                                    <div class="error-wrapper">
+                                        <label class="input-label" for="title">{{translate('messages.end_date')}}</label>
+                                        <input type="date" id="date_to" class="form-control" required="" name="end_date" value="{{$campaign->end_date->format('Y-m-d')}}">
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-6">
-                                    <div>
+                                    <div class="error-wrapper">
                                         <label class="input-label text-capitalize" for="title">{{translate('messages.daily_start_time')}}</label>
                                         <input type="time" id="start_time" class="form-control" name="start_time" value="{{$campaign->start_time}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <label class="input-label text-capitalize" for="title">{{translate('messages.daily_end_time')}}</label>
-                                    <input type="time" id="end_time" class="form-control" name="end_time" value="{{$campaign->end_time}}">
+                                    <div class="error-wrapper">
+                                        <label class="input-label text-capitalize" for="title">{{translate('messages.daily_end_time')}}</label>
+                                        <input type="time" id="end_time" class="form-control" name="end_time" value="{{$campaign->end_time}}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-6">
-                            <div class="form-group mb-0 h-100 d-flex flex-column">
-                                <label>
-                                    {{translate('messages.campaign_image')}}
-                                    <small class="text-danger">* ( {{translate('messages.ratio')}} 900x300 )</small>
-                                </label>
-                                <div class="text-center py-3 my-auto">
-                                    <img class="initial--4 onerror-image" id="viewer"
-                                    src="{{$campaign->image_full_url }}"
-                                         data-onerror-image="{{ asset('public/assets/admin/img/900x400/img1.jpg') }}" alt="campaign image"/>
-                                </div>
-                                <div class="custom-file">
-                                    <input type="file" name="image" id="customFileEg1" class="custom-file-input"
-                                           accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
+                            <div class="error-wrapper">
+                                <div class="form-group mb-0 h-100 d-flex flex-column">
+                                    <label>
+                                        {{translate('messages.campaign_image')}}
+                                        <small class="text-danger">* ( {{translate('messages.ratio')}} 900x300 )</small>
+                                    </label>
+                                    <div class="text-center py-3 my-auto">
+                                        <img class="initial--4 onerror-image" id="viewer"
+                                        src="{{$campaign->image_full_url }}"
+                                             data-onerror-image="{{ asset('public/assets/admin/img/900x400/img1.jpg') }}" alt="campaign image"/>
+                                    </div>
+                                    <div class="custom-file">
+                                        <input type="file" name="image" id="customFileEg1" class="custom-file-input"
+                                               accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
+                                        <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -164,6 +167,12 @@
 
         $('#campaign-form').on('submit', function (e) {
             e.preventDefault();
+
+            let $form = $(this);
+            if (!$form.valid()) {
+                return false;
+            }
+
             var formData = new FormData(this);
             $.ajaxSetup({
                 headers: {

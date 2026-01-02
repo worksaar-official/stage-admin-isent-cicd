@@ -257,9 +257,14 @@
 
             Swal.fire({
                 title: '{{translate('messages.are_you_sure')}}',
-                text: '{{translate('messages.you want to sent notification to')}}'+$('#tergat').val()+'?',
-                type: 'info',
+                text: '{{translate('messages.you want to sent notification to ')}}'+$('#tergat').val()+'?',
+                imageUrl: '{{ asset('public/assets/admin/img/off-danger.png') }}',
+                imageWidth: 80,
+                imageHeight: 80,
+                imageAlt: 'Custom icon',
                 showCancelButton: true,
+                showCloseButton: true,
+                closeButtonHtml: '×',
                 cancelButtonColor: 'default',
                 confirmButtonColor: 'primary',
                 cancelButtonText: '{{translate('messages.no')}}',

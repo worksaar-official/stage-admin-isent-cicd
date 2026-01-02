@@ -38,6 +38,10 @@
                 <a class="nav-link {{ Request::is('admin/business-settings/pages/react-landing-page-settings/fixed-data*') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.react-landing-page-settings', 'fixed-data') }}">{{translate('messages.fixed_Data')}}</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/pages/react-landing-page-settings/meta-data') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.react-landing-page-settings', 'meta-data') }}">{{translate('messages.meta_data')}}</a>
+            </li>
         </ul>
         <!-- End Nav -->
     </div>
