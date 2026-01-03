@@ -30,8 +30,6 @@ use App\Models\StoreWallet;
 use App\Models\Translation;
 use Illuminate\Support\Str;
 use mysql_xdevapi\Exception;
-use PayPal\Api\Transaction;
-use App\Models\ItemCampaign;
 use App\Models\FlashSaleItem;
 use Illuminate\Support\Carbon;
 use App\Models\BusinessSetting;
@@ -42,7 +40,6 @@ use Illuminate\Support\Facades\DB;
 use App\Mail\OrderVerificationMail;
 use App\Models\NotificationMessage;
 use App\Models\NotificationSetting;
-
 use App\Models\SubscriptionPackage;
 use App\Traits\PaymentGatewayTrait;
 use Illuminate\Support\Facades\App;
@@ -59,16 +56,15 @@ use App\Models\PriorityList;
 use App\Models\SubscriptionTransaction;
 use Illuminate\Support\Facades\Storage;
 use App\Models\StoreNotificationSetting;
-use Modules\Rental\Traits\TripLogicTrait;
 use App\Traits\NotificationDataSetUpTrait;
-use Illuminate\Database\Eloquent\Collection;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use App\Models\SubscriptionBillingAndRefundHistory;
 use Modules\Rental\Emails\ProviderSubscriptionSuccessful;
 use Modules\Rental\Emails\ProviderSubscriptionRenewOrShift;
 use Laravelpkg\Laravelchk\Http\Controllers\LaravelchkController;
 use Modules\Rental\Entities\Vehicle;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
+use App\CentralLogics\SMS_module;
 
 class Helpers
 {
@@ -484,7 +480,7 @@ class Helpers
             $data['tax_data']= \Modules\TaxModule\Entities\Tax::whereIn('id', $data['tax_data'])->get(['id', 'name', 'tax_rate']);
             unset($data['taxVats']);
 
-    
+
             unset($data['pharmacy_item_details']);
             unset($data['store']);
             unset($data['rating']);
@@ -1048,7 +1044,7 @@ class Helpers
             if ($item['item_id']){
                 $product = \App\Models\Item::where(['id' => $item['item_details']['id']])->first();
                 $item['image_full_url'] = $product?->image_full_url;
-                $item['images_full_url'] = $product->images_full_url;
+                $item['images_full_url'] = $product?->images_full_url;
             }else{
                $product = \App\Models\ItemCampaign::where(['id' => $item['item_details']['id']])->first();
                 $item['image_full_url'] = $product?->image_full_url;
@@ -1273,21 +1269,7 @@ class Helpers
 
         return $currency_symbol_position == 'right' ? number_format($value, config('round_up_to_digit')) . ' ' . self::currency_symbol() : self::currency_symbol() . ' ' . number_format($value, config('round_up_to_digit'));
     }
-    //new fucntion added
-    public static function round_to_50_or_next_int(float $amount): float
-    {
-        $floor = floor($amount);
-        $fraction = $amount - $floor;
 
-        if ($fraction <= 0.0000001) {
-            return round($amount, config('round_up_to_digit', 2));
-        } elseif ($fraction <= 0.5) {
-            return round($floor + 0.5, config('round_up_to_digit', 2));
-        } else {
-            return round($floor + 1.0, config('round_up_to_digit', 2));
-        }
-    }
-    //new fucntion added end
     public static function sendNotificationToHttp(array|null $data)
     {
         $config = self::get_business_settings('push_notification_service_file_content');
@@ -1768,8 +1750,6 @@ class Helpers
                 ];
 
                 self::send_push_notif_to_topic($data, 'admin_message', 'order_request', url('/').'/admin/order/list/all');
-                self::sendVendorWhatsAppItemList($order);
-                self::sendUserWhatsAppNotification($order);
             }
 
             $status = ($order->order_status == 'delivered' && $order->delivery_man) ? 'delivery_boy_delivered' : $order->order_status;
@@ -2035,211 +2015,11 @@ class Helpers
             } catch (\Exception $ex) {
                 info($ex->getMessage());
             }
-
-            // Send WhatsApp notification for order status updates
-            self::sendOrderStatusWhatsAppNotification($order);
-            
             return true;
         } catch (\Exception $e) {
             info($e->getMessage());
         }
         return false;
-    }
-
-    //worksaar whatsapp  integration
-    public static function sendVendorWhatsAppItemList($order)
-    {
-        $status = BusinessSetting::where('key', 'whatsapp_status')->first();
-        if (!$status || !$status->value) return false;
-        $vendorPhone = data_get($order, 'store.vendor.phone') ?: data_get($order, 'store.phone');
-        if (!$vendorPhone) return false;
-        $recipient = preg_replace('/[^+\d]+/', '', (string)$vendorPhone);
-        if (!$recipient) return false;
-
-        $itemsText = $order->details()->with('item')->get()->values()->map(function($d, $key){
-            $name = $d->item ? $d->item->name : 'Item';
-            $price = self::format_currency($d->price);
-            $subtotal = self::format_currency($d->price * $d->quantity);
-            return ($key+1).'. '.strtoupper($name)."\n   Quantity: ".$d->quantity."\n   Price: ".$price." each\n   Subtotal: ".$subtotal;
-        })->implode("\n");
-
-        $addressArr = is_array($order->receiver_details) ? $order->receiver_details : (array)json_decode($order->delivery_address, true);
-        $customerName = $order->is_guest ? data_get($addressArr, 'contact_person_name') : trim(($order->customer?->f_name ?? '').' '.($order->customer?->l_name ?? ''));
-        $customerPhone = data_get($addressArr, 'contact_person_number');
-
-        $discountTotal = ($order->store_discount_amount ?? 0) + ($order->coupon_discount_amount ?? 0) + ($order->flash_admin_discount_amount ?? 0) + ($order->flash_store_discount_amount ?? 0) + ($order->ref_bonus_amount ?? 0);
-        $vatTax = $order->total_tax_amount ?? 0;
-        $deliveryTips = $order->dm_tips ?? 0;
-        $deliveryFee = $order->delivery_charge ?? ($order->original_delivery_charge ?? 0);
-
-        $chargesLines = [];
-        if ($discountTotal > 0) $chargesLines[] = 'Discount: -'.self::format_currency($discountTotal);
-        if ($vatTax > 0) $chargesLines[] = 'Vat/Tax: +'.self::format_currency($vatTax);
-        if ($deliveryTips > 0) $chargesLines[] = 'Delivery Man Tips: +'.self::format_currency($deliveryTips);
-        if ($deliveryFee > 0) $chargesLines[] = 'Delivery Fee: +'.self::format_currency($deliveryFee);
-
-        $lines = [
-            '🛍️ NEW ORDER PLACED',
-            '',
-            '📦 Order Details:',
-            $itemsText,
-        ];
-
-        if (count($chargesLines)) {
-            $lines[] = '';
-            $lines[] = 'Order Summary:';
-            foreach ($chargesLines as $cl) { $lines[] = $cl; }
-        }
-
-        $lines[] = '';
-        $lines[] = '💰 Total Amount: '.self::format_currency($order->order_amount);
-        $lines[] = '';
-        $lines[] = 'Customer Details:';
-        $lines[] = 'Name: '.($customerName ?: 'N/A');
-        $lines[] = '📞 Phone: '.($customerPhone ?: 'N/A');
-        $lines[] = 'Store : https://admin.isent.online/login/vendor';
-
-        $message = implode("\n", $lines);
-
-        $endpoint = config('services.whatsapp.endpoint', 'https://sender.worksaar.com/api/send/whatsapp');
-        $secret = BusinessSetting::where('key', 'whatsapp_secret')->first();
-        $secret = $secret ? $secret->value : null;
-        $account = BusinessSetting::where('key', 'whatsapp_account_id')->first();
-        $account = $account ? $account->value : null;
-        if (!$secret || !$account) return false;
-
-        try {
-            $res = \Illuminate\Support\Facades\Http::asMultipart()->post($endpoint, [
-                'secret' => $secret,
-                'account' => $account,
-                'recipient' => $recipient,
-                'type' => 'text',
-                'message' => $message,
-            ]);
-            Log::info('whatsapp_send_result', ['order_id' => $order->id, 'status' => $res->status(), 'body' => $res->body()]);
-            return $res->successful();
-        } catch (\Exception $e) {
-            Log::error('whatsapp_send_error', ['order_id' => $order->id, 'error' => $e->getMessage()]);
-            return false;
-        }
-    }
-
-    public static function sendUserWhatsAppNotification($order)
-    {
-        $vendor_id = $order->store ? $order->store->vendor_id : null;
-        if (!$vendor_id) return false;
-
-        $credentials = \App\Models\VendorWhatsappMessage::where('vendor_id', $vendor_id)->first();
-        if (!$credentials || !$credentials->status || !$credentials->account_id || !$credentials->secret_key) {
-            return false;
-        }
-
-        $userPhone = $order->customer ? $order->customer->phone : null;
-        if (!$userPhone) return false;
-
-        $recipient = preg_replace('/[^+\d]+/', '', (string)$userPhone);
-
-        $itemsText = $order->details()->with('item')->get()->values()->map(function($d, $key){
-            $name = $d->item ? $d->item->name : ($d->campaign ? $d->campaign->title : 'Item');
-            $price = self::format_currency($d->price);
-            $subtotal = self::format_currency($d->price * $d->quantity);
-            return ($key+1).'. '.strtoupper($name)."\n   Quantity: ".$d->quantity."\n   Price: ".$price." each\n   Subtotal: ".$subtotal;
-        })->implode("\n\n");
-
-        $trackingUrl = 'https://admin.isent.online/track-order/' . $order->id;
-
-        $discountTotal = ($order->store_discount_amount ?? 0) + ($order->coupon_discount_amount ?? 0) + ($order->flash_admin_discount_amount ?? 0) + ($order->flash_store_discount_amount ?? 0) + ($order->ref_bonus_amount ?? 0);
-        $vatTax = $order->total_tax_amount ?? 0;
-        $deliveryTips = $order->dm_tips ?? 0;
-        $deliveryFee = $order->delivery_charge ?? ($order->original_delivery_charge ?? 0);
-
-        $chargesLines = [];
-        if ($discountTotal > 0) $chargesLines[] = 'Discount: -'.self::format_currency($discountTotal);
-        if ($vatTax > 0) $chargesLines[] = 'Vat/Tax: +'.self::format_currency($vatTax);
-        if ($deliveryTips > 0) $chargesLines[] = 'Delivery Man Tips: +'.self::format_currency($deliveryTips);
-        if ($deliveryFee > 0) $chargesLines[] = 'Delivery Fee: +'.self::format_currency($deliveryFee);
-
-        $summary = '';
-        if (count($chargesLines)) { $summary = "\n\nOrder Summary:\n".implode("\n", $chargesLines); }
-
-        $message = "🛍️ NEW ORDER PLACED\n\n📦 We have received your below Order and are working on it:\n\n" .
-                   $itemsText .
-                   $summary .
-                   "\n\n💰 Total Amount: " . self::format_currency($order->order_amount) .
-                   "\n\nTrack your order here:\n" . $trackingUrl .
-                   "\n\n🔴 *How much cash will you use?*\n" .
-                   "\n\nThank you for ordering with us!";
-
-        $endpoint = 'https://sender.worksaar.com/api/send/whatsapp';
-
-        try {
-            $response = \Illuminate\Support\Facades\Http::asMultipart()->post($endpoint, [
-                'secret' => $credentials->secret_key,
-                'account' => $credentials->account_id,
-                'recipient' => $recipient,
-                'type' => 'text',
-                'message' => $message,
-            ]);
-
-            Log::info('whatsapp_user_send_result', ['order_id' => $order->id, 'status' => $response->status(), 'body' => $response->body()]);
-            return $response->successful();
-        } catch (\Exception $e) {
-            Log::error('whatsapp_user_send_error', ['order_id' => $order->id, 'error' => $e->getMessage()]);
-            return false;
-        }   
-    }
-
-    public static function sendOrderStatusWhatsAppNotification($order)
-    {
-        $vendor_id = $order->store ? $order->store->vendor_id : null;
-        if (!$vendor_id) return false;
-
-        $credentials = \App\Models\VendorWhatsappMessage::where('vendor_id', $vendor_id)->first();
-        if (!$credentials || !$credentials->status || !$credentials->account_id || !$credentials->secret_key) {
-            return false;
-        }
-
-        $userPhone = $order->customer ? $order->customer->phone : null;
-        if (!$userPhone) return false;
-
-        $recipient = preg_replace('/[^+\d]+/', '', (string)$userPhone);
-
-        $status_messages = [
-            'pending'       => 'Your order has been received and is pending confirmation',
-            'confirmed'     => 'Your order has been confirmed and is being prepared',
-            'processing'    => 'Your order is being processed/being prepared',
-            'handover'      => 'Your order is ready for delivery',
-            'picked_up'     => 'Your order has been picked up by the delivery person',
-            'delivered'     => 'Your order has been delivered successfully',
-            'canceled'      => 'Your order has been canceled',
-            'refunded'      => 'Your order has been refunded',
-        ];
-
-        $status_message = $status_messages[$order->order_status] ?? 'Your order status has been updated';
-        
-        $message = "🛍️ ORDER STATUS UPDATE\n\nOrder ID: #" . $order->id . "\n" .
-                   "Status: " . ucfirst($order->order_status) . "\n" .
-                   "Message: " . $status_message . "\n\n" .
-                   "Track your order here:\nhttps://admin.isent.online/track-order/" . $order->id .
-                   "\n\nThank you for ordering with us!";
-
-        $endpoint = 'https://sender.worksaar.com/api/send/whatsapp';
-
-        try {
-            $response = \Illuminate\Support\Facades\Http::asMultipart()->post($endpoint, [
-                'secret' => $credentials->secret_key,
-                'account' => $credentials->account_id,
-                'recipient' => $recipient,
-                'type' => 'text',
-                'message' => $message,
-            ]);
-
-            Log::info('whatsapp_order_status_send_result', ['order_id' => $order->id, 'status' => $response->status(), 'body' => $response->body(), 'status' => $order->order_status]);
-            return $response->successful();
-        } catch (\Exception $e) {
-            Log::error('whatsapp_order_status_send_error', ['order_id' => $order->id, 'error' => $e->getMessage(), 'status' => $order->order_status]);
-            return false;
-        }
     }
 
     public static function day_part()
@@ -2363,7 +2143,7 @@ class Helpers
                 if (!Storage::disk(self::getDisk())->exists($dir)) {
                     Storage::disk(self::getDisk())->makeDirectory($dir);
                 }
-                Storage::disk(self::getDisk())->putFileAs($dir, $image, $imageName);
+                Storage::disk(self::getDisk())->putFileAs($dir, $image, $imageName,['visibility' => 'public']);
             } else {
                 $imageName = 'def.png';
             }
@@ -3907,7 +3687,6 @@ class Helpers
             'payment_modules/gateway_image' => asset('/public/assets/admin/img/payment/placeholder.png'),
             'email_template' => asset('/public/assets/admin/img/blank1.png'),
         ];
-      	$data = is_string($data) ? trim($data) : $data;
 
         try {
             if ($data && $type == 's3' && Storage::disk('s3')->exists($path .'/'. $data)) {
@@ -4544,7 +4323,7 @@ class Helpers
             return [];
         }
 
-        $methods = DB::table('addon_settings')->where('is_active',1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz','paypal','stripe','razor_pay','senang_pay','paytabs','paystack','paymob_accept','paytm','flutterwave','liqpay','bkash','mercadopago','ndasenda'])->get();
+        $methods = DB::table('addon_settings')->where('is_active',1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz','paypal','stripe','razor_pay','senang_pay','paytabs','paystack','paymob_accept','paytm','flutterwave','liqpay','bkash','mercadopago'])->get();
         $env = env('APP_ENV') == 'live' ? 'live' : 'test';
         $credentials = $env . '_values';
 
@@ -4689,7 +4468,7 @@ class Helpers
             $credentials = $env . '_values';
 
         } else{
-            $methods = DB::table('addon_settings')->where('is_active',1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz','paypal','stripe','razor_pay','senang_pay','paytabs','paystack','paymob_accept','paytm','flutterwave','liqpay','bkash','mercadopago','ndasenda'])->get();
+            $methods = DB::table('addon_settings')->where('is_active',1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz','paypal','stripe','razor_pay','senang_pay','paytabs','paystack','paymob_accept','paytm','flutterwave','liqpay','bkash','mercadopago'])->get();
             $env = env('APP_ENV') == 'live' ? 'live' : 'test';
             $credentials = $env . '_values';
 
@@ -4948,6 +4727,8 @@ class Helpers
         foreach ($sanitizedKeys as $key) {
             Cache::forget($key);
         }
+            Artisan::call('cache:clear');
+            Artisan::call('config:clear');
     }
 
     public static function minDiscountCheck($productPrice, $discount)
@@ -5125,6 +4906,30 @@ class Helpers
         }
         return [ 'productWiseTax' => $productWiseTax?? false ,'categoryWiseTax'=> $categoryWiseTax?? false,  'taxVats' => $taxVats ?? []];
     }
+
+
+
+    public static function sendOrderDeliveryVerificationOtp($order){
+        if (self::getNotificationStatusData('customer', 'customer_delivery_verification_otp', 'sms_status') ) {
+                $published_status = 0;
+                $payment_published_status = config('get_payment_publish_status');
+                if (isset($payment_published_status[0]['is_published'])) {
+                    $published_status = $payment_published_status[0]['is_published'];
+                }
+                $address = json_decode($order->delivery_address, true);
+                $phone= $order->is_guest ?   data_get($address,'contact_person_number') :  $order?->customer?->phone;
+
+                if($published_status == 1){
+                    $response =  \Modules\Gateways\Traits\SmsGateway::send($phone,$order->otp);
+                }else{
+                    $response = SMS_module::send($phone,$order->otp);
+                }
+        }
+
+        return $response ?? null;
+    }
+
+
 
 }
 
