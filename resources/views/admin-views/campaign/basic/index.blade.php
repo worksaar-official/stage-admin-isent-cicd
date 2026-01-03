@@ -22,7 +22,11 @@
         <!-- End Page Header -->
         <div class="card">
             <div class="card-body">
-                <form enctype="multipart/form-data" class="custom-validation" data-ajax="true" id="campaign-form">
+                <form action="{{route('admin.campaign.store-basic')}}" method="post" enctype="multipart/form-data"
+
+                id="campaign-form"
+                >
+                    @csrf
                     @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
                     @php($defaultLang = str_replace('_', '-', app()->getLocale()))
@@ -42,24 +46,24 @@
                             @endforeach
                         </ul>
                         <div class="lang_form" id="default-form">
-                            <div class="form-group error-wrapper">
+                            <div class="form-group">
                                 <label class="input-label" for="default_title">{{translate('messages.title')}} ({{ translate('messages.default') }})</label>
-                                <input type="text" name="title[]" id="default_title" class="form-control" placeholder="{{translate('messages.new_campaign')}}"  required>
+                                <input type="text" name="title[]" id="default_title" class="form-control" placeholder="{{translate('messages.new_campaign')}}"  >
                             </div>
                             <input type="hidden" name="lang[]" value="default">
-                            <div class="form-group error-wrapper">
+                            <div class="form-group">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.short_description')}} ({{ translate('messages.default') }})</label>
-                                <textarea type="text" name="description[]" class="form-control ckeditor" required></textarea>
+                                <textarea type="text" name="description[]" class="form-control ckeditor"></textarea>
                             </div>
                         </div>
                         @foreach(json_decode($language) as $lang)
                             <div class="d-none lang_form" id="{{$lang}}-form">
-                                <div class="form-group error-wrapper">
+                                <div class="form-group">
                                     <label class="input-label" for="{{$lang}}_title">{{translate('messages.title')}} ({{strtoupper($lang)}})</label>
                                     <input type="text" name="title[]" id="{{$lang}}_title" class="form-control" placeholder="{{translate('messages.new_campaign')}}"  >
                                 </div>
                                 <input type="hidden" name="lang[]" value="{{$lang}}">
-                                <div class="form-group error-wrapper">
+                                <div class="form-group">
                                     <label class="input-label" for="exampleFormControlInput1">{{translate('messages.short_description')}} ({{strtoupper($lang)}})</label>
                                     <textarea type="text" name="description[]" class="form-control ckeditor"></textarea>
                                 </div>
@@ -67,12 +71,12 @@
                         @endforeach
                     @else
                     <div id="default-form">
-                        <div class="form-group error-wrapper">
+                        <div class="form-group">
                             <label class="input-label" for="exampleFormControlInput1">{{translate('messages.title')}} ({{ translate('messages.default') }})</label>
                             <input type="text" name="title[]" class="form-control" placeholder="{{translate('messages.new_food')}}">
                         </div>
                         <input type="hidden" name="lang[]" value="en">
-                        <div class="form-group error-wrapper">
+                        <div class="form-group">
                             <label class="input-label" for="exampleFormControlInput1">{{translate('messages.short_description')}}</label>
                             <textarea type="text" name="description[]" class="form-control ckeditor"></textarea>
                         </div>
@@ -94,25 +98,25 @@
                                     </div>
                                 </div> --}}
                                 <div class="col-sm-6">
-                                    <div class="error-wrapper">
+                                    <div>
                                         <label class="input-label" for="title">{{translate('messages.start_date')}}</label>
                                         <input type="date" id="date_from" class="form-control" required="" name="start_date">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <div class="error-wrapper">
+                                    <div>
                                         <label class="input-label" for="title">{{translate('messages.end_date')}}</label>
                                         <input type="date" id="date_to" class="form-control" required="" name="end_date">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <div class="error-wrapper">
+                                    <div>
                                         <label class="input-label text-capitalize" for="title">{{translate('messages.daily_start_time')}}</label>
                                         <input type="time" id="start_time" class="form-control" name="start_time">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
-                                    <div class="error-wrapper">
+                                    <div>
                                         <label class="input-label text-capitalize" for="title">{{translate('messages.daily_end_time')}}</label>
                                         <input type="time" id="end_time" class="form-control" name="end_time">
                                     </div>
@@ -120,21 +124,19 @@
                             </div>
                         </div>
                         <div class="col-lg-6">
-                            <div class="error-wrapper">
-                                <div class="form-group mb-0 h-100 d-flex flex-column">
-                                    <label>
-                                        {{translate('messages.campaign_image')}}
-                                        <small class="text-danger">* ( {{translate('messages.ratio')}} 900x300 )</small>
-                                    </label>
-                                    <div class="text-center py-3 my-auto">
-                                        <img class="initial--4" id="viewer"
-                                             src="{{asset('public/assets/admin/img/900x400/img1.jpg')}}" alt="campaign image"/>
-                                    </div>
-                                    <div class="custom-file">
-                                        <input type="file" name="image" id="customFileEg1" class="custom-file-input"
-                                               accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                        <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
-                                    </div>
+                            <div class="form-group mb-0 h-100 d-flex flex-column">
+                                <label>
+                                    {{translate('messages.campaign_image')}}
+                                    <small class="text-danger">* ( {{translate('messages.ratio')}} 900x300 )</small>
+                                </label>
+                                <div class="text-center py-3 my-auto">
+                                    <img class="initial--4" id="viewer"
+                                         src="{{asset('public/assets/admin/img/900x400/img1.jpg')}}" alt="campaign image"/>
+                                </div>
+                                <div class="custom-file">
+                                    <input type="file" name="image" id="customFileEg1" class="custom-file-input"
+                                           accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                             </div>
                         </div>
@@ -156,12 +158,6 @@
     "use strict";
         $('#campaign-form').on('submit', function (e) {
             e.preventDefault();
-
-            let $form = $(this);
-            if (!$form.valid()) {
-                return false;
-            }
-
             var formData = new FormData(this);
             $.ajaxSetup({
                 headers: {

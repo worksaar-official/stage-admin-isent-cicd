@@ -423,12 +423,12 @@
                                             <div class="card __card bg-F8F9FC rounded p-20 h-100">
                                                 <div class="card-body">
                                                     <div class="form-group mb-3">
-                                                        <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Taxpayer Identification Number(TIN)')}} </label>
-                                                        <input type="text" name="tin" placeholder="{{translate('Type Your Taxpayer Identification Number(TIN)')}}" class=" form-control __form-control" >
+                                                        <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Taxpayer Identification Number(TIN)')}} <span class="text-danger">*</span></label>
+                                                        <input type="text" name="tin" placeholder="{{translate('Type Your Taxpayer Identification Number(TIN)')}}" class=" form-control __form-control" required>
                                                     </div>
                                                     <div class="form-group mb-0">
-                                                        <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Expire Date')}} </label>
-                                                        <input type="date" name="tin_expire_date" class="form-control __form-control" >
+                                                        <label class="input-label mb-2 d-block title-clr fw-normal" for="exampleFormControlInput1">{{translate('Expire Date')}} <span class="text-danger">*</span></label>
+                                                        <input type="date" name="tin_expire_date" class="form-control __form-control" required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -460,8 +460,8 @@
                                                                 <img width="40" height="40" class="svg"
                                                                      src="{{ asset('public/assets/admin/img/doc-uploaded.png') }}"
                                                                      alt="">
-                                                                <p class="fs-12 mb-0">{{ translate('messages.Select_a_file_or') }} <span class="font-semibold">{{ translate('messages.Drag & Drop') }}</span>
-                                                                    {{ translate('messages.here') }}</p>
+                                                                <p class="fs-12 mb-0">Select a file or <span class="font-semibold">Drag & Drop</span>
+                                                                    here</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -604,7 +604,10 @@
                             <div class="text-end pt-4 d-flex flex-wrap justify-content-end gap-3">
                                 <button type="reset" id='reset-btn'
                                     class="cmn--btn btn--secondary shadow-none rounded-md border-0 outline-0">{{ translate('Reset') }}</button>
-                                    <button  type="{{ \App\CentralLogics\Helpers::subscription_check() == 1 ? 'button' : 'submit' }}"  id="show-business-plan-div" class="cmn--btn rounded-md border-0 outline-0">{{ translate('Next') }}</button>
+                                <button
+                                    type="{{ \App\CentralLogics\Helpers::subscription_check() == 1 ? 'button' : 'submit' }}"
+                                    id="show-business-plan-div"
+                                    class="cmn--btn rounded-md border-0 outline-0">{{ translate('Next') }}</button>
                             </div>
                         </div>
                     </div>
@@ -685,7 +688,7 @@
 
                                     </div>
                                 </div>
-                                <div class="text-end pt-5 d-flex flex-wrap p-4 justify-content-end gap-3">
+                                <div class="text-end pt-5 d-flex flex-wrap justify-content-end gap-3">
                                     <button type="button" id="back-to-form"
                                         class="cmn--btn btn--secondary shadow-none rounded-md border-0 outline-0">{{ translate('Back') }}</button>
                                     <button type="submit"
@@ -885,7 +888,7 @@
 
 
         $('#show-business-plan-div').on('click', function(e) {
-            const fileInputs = document.querySelectorAll('input[name="logo"], input[name="cover_photo"]');
+            const fileInputs = document.querySelectorAll('input[type="file"]');
             fileInputs.forEach(input => {
 
                 if (input.files.length === 0) {

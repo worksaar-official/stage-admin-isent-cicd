@@ -202,7 +202,33 @@
     <script src="{{asset('public/assets/admin/ckeditor/ckeditor.js')}}"></script>
     <script>
         "use strict";
+        $('.module-change').on('click', function (){
+            let id = $(this).val();
+            modulChange(id)
+        })
+        function modulChange(id)
+        {
+            $.get({
+                url: "{{url('/')}}/admin/module/type/?module_type="+id,
+                dataType: 'json',
+                success: function (data) {
+                    if(data.data.description.length)
+                    {
+                        $('#module_des_card').show();
+                        $('#module_description').html(data.data.description);
+                    }
+                    else
+                    {
+                        $('#module_des_card').hide();
+                    }
+                    if(id=='parcel')
+                    {
+                        $('#module_theme').hide();
 
+                    }
+                },
+            });
+        }
 
         function readURL(input, id) {
             if (input.files && input.files[0]) {
@@ -224,11 +250,23 @@
             readURL(this,'viewer2');
         });
 
+        $(".lang_link").click(function(e){
+            e.preventDefault();
+            $(".lang_link").removeClass('active');
+            $(".lang_form").addClass('d-none');
+            $(this).addClass('active');
 
+            let form_id = this.id;
+            let lang = form_id.substring(0, form_id.length - 5);
+            console.log(lang);
+            $("#"+lang+"-form").removeClass('d-none');
+        });
 
         $(document).ready(function () {
             @if ($module->module_type=='parcel')
                 $('#module_des_card').hide();
+                $('#module_theme').hide();
+                $('#zone_check').hide();
             @endif
             $('.ckeditor').ckeditor();
         });

@@ -360,10 +360,6 @@ class OrderController extends Controller
         if($request->order_status == 'processing') {
             $order->processing_time = ($request?->processing_time) ? $request->processing_time : explode('-', $order['store']['delivery_time'])[0];
         }
-        else if ($order->order_type != 'parcel' && in_array($request->order_status, ['picked_up']) ) {
-            Helpers::sendOrderDeliveryVerificationOtp($order);
-        }
-
         $order[$request['order_status']] = now();
         $order->save();
         if(!Helpers::send_order_notification($order))

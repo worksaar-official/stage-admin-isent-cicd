@@ -52,10 +52,10 @@
                                     alt="">
                                 <div
                                     class="d-flex align-items-center gap-2 justify-content-between flex-grow-1">
-                                    PHP Version 8.2 +
+                                    PHP Version 8.1 +
 
                                     @php($phpVersion = number_format((float)phpversion(), 2, '.', ''))
-                                    @if ($phpVersion >= 8.2)
+                                    @if ($phpVersion >= 8.1)
                                         <img width="20"
                                              src="{{asset('public/assets/installation')}}/assets/img/svg-icons/check.png"
                                              alt="">
@@ -63,7 +63,7 @@
                                         <span class="cursor-pointer" data-bs-toggle="tooltip"
                                               data-bs-placement="top" data-bs-custom-class="custom-tooltip"
                                               data-bs-html="true" data-bs-delay='{"hide":1000}'
-                                              data-bs-title="Your php version in server is lower than 8.2 version
+                                              data-bs-title="Your php version in server is lower than 8.1 version
                                                    <a href='https://support.cpanel.net/hc/en-us/articles/360052624713-How-to-change-the-PHP-version-for-a-domain-in-cPanel-or-WHM'
                                                    class='d-block' target='_blank'>See how to update</a> ">
                                                 <img

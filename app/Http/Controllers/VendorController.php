@@ -97,6 +97,9 @@ class VendorController extends Controller
                 'mimes:webp,jpg,jpeg,png',
                 'max:2048',
             ],
+            'tin' => 'required',
+            'tin_expire_date' => 'required',
+            'tin_certificate_image' => 'required',
             'delivery_time_type'=>'required',
         ],[
             'password.min_length' => translate('The password must be at least :min characters long'),

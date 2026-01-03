@@ -30,7 +30,7 @@ class WithdrawRequest extends Model
     }
 
     public function deliveryman(){
-        return $this->belongsTo(DeliveryMan::class,'delivery_man_id');
+        return $this->belongsTo(DeliveryMan::class);
     }
 
     protected static function booted()

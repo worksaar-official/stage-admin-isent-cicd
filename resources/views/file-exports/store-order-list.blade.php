@@ -1,4 +1,3 @@
-
 <div class="row">
     <div class="col-lg-12 text-center "><h1 > {{translate('Store_Order_List')}}
     </h1></div>
@@ -16,6 +15,7 @@
                     <br>
                     {{ translate('Total_Order')  }}: {{ $data['data']->count() ?? translate('N/A') }}
                 </th>
+                <th> </th>
                 <th> </th>
             </tr>
 
@@ -39,6 +39,7 @@
                     {{ translate('Refunded_Order')  }}: {{ $data['data']->where('order_status' ,'refunded')->count() ?? translate('N/A') }}
                 </th>
                 <th> </th>
+                <th> </th>
             </tr>
 
 
@@ -54,6 +55,9 @@
             <th>{{ translate('Coupon_Discount') }}</th>
             <th>{{ translate('Discounted_Amount') }}</th>
             <th>{{ translate('Vat/Tax') }}</th>
+            <th>{{ translate('Delivery_Charge') }}</th>
+            <th>{{ translate('Local_Currency_Rate') }}</th>
+            <th>{{ translate('Local_Currency_Delivery_Fees') }}</th>
             <th>{{ translate('Total_Amount') }}</th>
             <th>{{ translate('Payment_Status') }}</th>
             <th>{{ translate('Order_Status') }}</th>
@@ -75,6 +79,9 @@
                 <td> {{ \App\CentralLogics\Helpers::number_format_short($order['coupon_discount_amount']) }}</td>
                 <td> {{ \App\CentralLogics\Helpers::number_format_short($order['coupon_discount_amount'] + $order['store_discount_amount']) }}</td>
                 <td> {{ \App\CentralLogics\Helpers::number_format_short($order['total_tax_amount']) }}</td>
+                <td> {{ \App\CentralLogics\Helpers::number_format_short($order['delivery_charge']) }}</td>
+                <td>{{ $order['local_currency_rate'] ?? 'N/A' }}</td>
+                <td>{{ $order['local_currency_delivery_fees'] ?? 'N/A' }}</td>
                 <td> {{ \App\CentralLogics\Helpers::number_format_short($order['order_amount']) }}</td>
                 <td>{{translate($order->payment_status)}}</td>
                 <td> {{ translate($order->order_status)}}</td>

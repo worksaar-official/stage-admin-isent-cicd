@@ -20,7 +20,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{route('admin.coupon.store')}}" method="POST" class="custom-validation">
+                        <form action="{{route('admin.coupon.store')}}" method="POST">
                             @csrf
                             <div class="row">
                                 <div class="col-12">
@@ -40,12 +40,12 @@
                                         @endforeach
                                     </ul>
                                     <div class="lang_form" id="default-form">
-                                        <div class="form-group error-wrapper">
+                                        <div class="form-group">
                                             <label class="input-label"
                                                 for="default_title">{{ translate('messages.title') }}
                                                 (Default)
                                             </label>
-                                            <input type="text" value="{{ old('title.0') }}" name="title[]" id="default_title" required
+                                            <input type="text" value="{{ old('title.0') }}" name="title[]" id="default_title"
                                                 class="form-control" placeholder="{{ translate('messages.new_coupon') }}" >
                                         </div>
                                         <input type="hidden" name="lang[]" value="default">
@@ -53,7 +53,7 @@
                                         @foreach ($language as $key => $lang)
                                             <div class="d-none lang_form"
                                                 id="{{ $lang }}-form">
-                                                <div class="form-group error-wrapper">
+                                                <div class="form-group">
                                                     <label class="input-label"
                                                         for="{{ $lang }}_title">{{ translate('messages.title') }}
                                                         ({{ strtoupper($lang) }})
@@ -67,7 +67,7 @@
                                         @endforeach
                                     @else
                                         <div id="default-form">
-                                            <div class="form-group error-wrapper">
+                                            <div class="form-group">
                                                 <label class="input-label"
                                                     for="exampleFormControlInput1">{{ translate('messages.title') }} ({{ translate('messages.default') }})</label>
                                                 <input type="text" name="title[]" class="form-control"
@@ -78,9 +78,9 @@
                                     @endif
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.coupon_type')}}</label>
-                                        <select name="coupon_type" id="coupon_type" class="form-control" required>
+                                        <select name="coupon_type" id="coupon_type" class="form-control">
                                             <option disabled selected>---{{translate('messages.Select_coupon_type')}}---</option>
                                             <option value="store_wise">{{translate('messages.store_wise')}}</option>
                                             <option value="zone_wise">{{translate('messages.zone_wise')}}</option>
@@ -91,7 +91,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6" id="store_wise">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlSelect1">{{translate('messages.store')}}<span
                                                 class="input-label-secondary"></span></label>
                                         <select name="store_ids[]" id="store_id" class="js-data-example-ajax form-control" data-placeholder="{{translate('messages.select_store')}}" title="{{translate('messages.select_store')}}">
@@ -100,7 +100,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6" id="zone_wise">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.select_zone')}}</label>
                                         <select name="zone_ids[]" id="choice_zones"
                                             class="form-control multiple-select2"
@@ -113,7 +113,7 @@
                                 </div>
                                 <div class="col-md-6 col-lg-6 col-sm-6" id="customer_wise">
 
-                                    <div class="form-group pickup-zone-tag error-wrapper">
+                                    <div class="form-group pickup-zone-tag">
                                         <label class="input-label" for="select_customer">{{translate('messages.select_customer')}}</label>
                                         <select name="customer_ids[]" id="select_customer"
                                             class="form-control  multiple-select2" multiple="multiple" data-placeholder="{{translate('messages.select_customer')}}">
@@ -125,7 +125,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <div class="d-flex justify-content-between">
                                             <label class="input-label" for="exampleFormControlInput1">{{translate('messages.code')}}</label>
                                             {{-- <label class="input-label generate-code" id="generate_code"><i class="tio-hand-draw"></i>{{translate('messages.Generate Code')}}</label> --}}
@@ -136,25 +136,25 @@
                                     </div>
                                 </div>
                                 <div id="limit_for_same_user" class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.limit_for_same_user')}}</label>
                                         <input type="number" name="limit" value="{{ old('limit') }}" id="coupon_limit" class="form-control" placeholder="EX: 10" min="1" max="100">
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.start_date')}}</label>
                                         <input type="date" name="start_date" value="{{ old('start_date') }}" class="form-control" id="date_from" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.expire_date')}}</label>
                                         <input type="date" name="expire_date" value="{{ old('expire_date') }}" class="form-control" id="date_to" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.discount_type')}}</label>
                                         <select name="discount_type" class="form-control" id="discount_type" required>
                                             <option value="amount">{{translate('messages.amount')}} ({{ \App\CentralLogics\Helpers::currency_symbol() }})
@@ -164,7 +164,7 @@
                                     </div>
                                 </div>
                                    <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.min_purchase')}} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
                                         <input type="number" step="0.01" id="min_purchase" value="{{ old('min_purchase') ?? 0 }}" name="min_purchase"   min="0" max="999999999999.99" class="form-control"
                                             placeholder="100">
@@ -172,7 +172,7 @@
                                 </div>
                                 
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.discount')}}
                                             <span class="input-label-secondary text--title" data-toggle="tooltip"
                                                 data-placement="right"
@@ -184,7 +184,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4 col-lg-3 col-sm-6">
-                                    <div class="form-group error-wrapper">
+                                    <div class="form-group">
                                         <label class="input-label" for="max_discount">{{translate('messages.max_discount')}} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
                                         <input type="number" step="0.01" min="0" value="{{ old('max_discount')?? 0 }}"  max="999999999999.99" name="max_discount" id="max_discount" class="form-control" readonly>
                                     </div>

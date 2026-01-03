@@ -30,4 +30,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'whatsapp' => [
+        'endpoint' => env('WHATSAPP_API_ENDPOINT', 'https://sender.worksaar.com/api/send/whatsapp'),
+        'secret' => env('WHATSAPP_SECRET'),
+        'account' => env('WHATSAPP_ACCOUNT_ID'),
+        'enabled' => env('WHATSAPP_ENABLED', false),
+    ],
+
 ];

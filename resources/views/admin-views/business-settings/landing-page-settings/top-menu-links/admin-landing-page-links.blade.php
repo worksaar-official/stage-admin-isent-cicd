@@ -42,10 +42,6 @@
                 <a class="nav-link {{ Request::is('admin/business-settings/pages/admin-landing-page-settings/background-color') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.admin-landing-page-settings', 'background-color') }}">{{translate('messages.background_colors')}}</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {{ Request::is('admin/business-settings/pages/admin-landing-page-settings/meta-data') ? 'active' : '' }}"
-                href="{{ route('admin.business-settings.admin-landing-page-settings', 'meta-data') }}">{{translate('messages.meta_data')}}</a>
-            </li>
         </ul>
         <!-- End Nav -->
     </div>

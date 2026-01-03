@@ -46,6 +46,7 @@ trait Payment
             'paytabs' => 'payment/paytabs/pay',
             'liqpay' => 'payment/liqpay/pay',
             'razor_pay' => 'payment/razor-pay/pay',
+           	'ndasenda' => 'payment/ndasenda/pay',
             'senang_pay' => 'payment/senang-pay/pay',
             'mercadopago' => 'payment/mercadopago/pay',
             'bkash' => 'payment/bkash/make-payment',

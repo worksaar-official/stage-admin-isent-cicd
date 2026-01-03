@@ -7,6 +7,7 @@ use App\Enums\ViewPaths\Admin\Brand;
 use App\Enums\ViewPaths\Admin\Banner;
 use App\Enums\ViewPaths\Admin\Coupon;
 use App\Enums\ViewPaths\Admin\Module;
+use App\Enums\ViewPaths\Admin\LocalCurrency;
 use Illuminate\Support\Facades\Route;
 use App\Enums\ViewPaths\Admin\CashBack;
 use App\Enums\ViewPaths\Admin\Category;
@@ -40,8 +41,22 @@ use App\Http\Controllers\Admin\Promotion\AdvertisementController;
 use App\Http\Controllers\Admin\Notification\NotificationController;
 use App\Http\Controllers\Admin\Subscription\SubscriptionController;
 use App\Http\Controllers\Admin\SurgePriceController;
+use App\Http\Controllers\Admin\Item\LocalCurrencyController;
+use Illuminate\Support\Facades\Artisan;
 
+
+//narayan trying to cicd
 Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
+
+    Route::get('/migratetable', function () {
+    Artisan::call('migrate', ['--force' => true]);
+    return nl2br(Artisan::output());
+});
+
+  Route::get('/rollback-migration', function () {
+    Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+    return nl2br(Artisan::output());
+});
 
     Route::get(Zone::GET_COORDINATES[URI].'/{id}', [ZoneController::class, 'getCoordinates'])->name('zone.get-coordinates');
     Route::get(Zone::GET_ALL_ZONE_COORDINATES[URI].'/{id?}', [ZoneController::class, 'getAllZoneCoordinates'])->name('zone.zoneCoordinates');
@@ -92,6 +107,12 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post(Unit::SEARCH[URI], [UnitController::class, 'search'])->name('search');
             Route::delete(Unit::DELETE[URI].'/{id}', [UnitController::class, 'delete'])->name('destroy');
             Route::get(Unit::EXPORT[URI].'/{type}', [UnitController::class, 'exportList'])->name('export');
+        });
+
+        Route::group(['prefix' => 'local-currency', 'as' => 'local-currency.'], function () {
+            Route::get(LocalCurrency::INDEX[URI], [LocalCurrencyController::class, 'index'])->name('index');
+            Route::get(LocalCurrency::UPDATE[URI].'/{id}', [LocalCurrencyController::class, 'getUpdateView'])->name('edit');
+            Route::put(LocalCurrency::UPDATE[URI].'/{id}', [LocalCurrencyController::class, 'update'])->name('update');
         });
 
         Route::group(['prefix' => 'addon', 'as' => 'addon.', 'middleware' => ['module:addon']], function () {

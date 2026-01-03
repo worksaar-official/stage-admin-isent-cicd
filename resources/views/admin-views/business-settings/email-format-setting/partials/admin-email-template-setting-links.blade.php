@@ -27,12 +27,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/admin/dm-withdraw-request') ? 'active' : '' }}"
-                href="{{ route('admin.business-settings.email-setup', ['admin','dm-withdraw-request']) }}">
-                    {{translate('Delivery Man Withdraw Request')}}
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/email-setup/admin/campaign-request') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.email-setup', ['admin','campaign-request']) }}">
                     {{translate('Campaign Join Request')}}
