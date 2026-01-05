@@ -91,6 +91,10 @@ trait  Processor
         if (in_array($payment_info->payment_platform, ['web', 'app']) && $payment_info['external_redirect_link'] != null) {
             return redirect($payment_info['external_redirect_link'] . '?flag=' . $payment_flag . '&&token=' . base64_encode($token_string));
         }
+        if ($payment_info->payment_platform === 'app' && empty($payment_info['external_redirect_link'])) {
+            $deep_link = 'isentapp://payment-result';
+            return redirect($deep_link . '?flag=' . $payment_flag . '&&token=' . base64_encode($token_string));
+        }
         return redirect()->route('payment-' . $payment_flag, ['token' => base64_encode($token_string)]);
     }
 }
