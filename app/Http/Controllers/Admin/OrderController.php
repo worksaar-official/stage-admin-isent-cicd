@@ -37,8 +37,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Rap2hpoutre\FastExcel\FastExcel;
 use App\Exports\StoreOrderlistExport;
 use App\Models\OrderPayment;
-use App\Models\ParcelCancellationReason;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class OrderController extends Controller
@@ -230,34 +230,20 @@ class OrderController extends Controller
             if($order->order_type == 'parcel'){
                 return to_route('admin.parcel.order.details', $id);
             }
-            $excludeDm = $order->delivery_man_id;
             if (isset($order->store)) {
                 $deliveryMen = DeliveryMan::where('zone_id', $order->store->zone_id)
                 ->where(function($query)use($order){
                             $query->where('vehicle_id',$order->dm_vehicle_id)->orWhereNull('vehicle_id');
-                    })
-                    ->where('id', '!=', $excludeDm)
-                    ->available()
-                    ->active()
-                    ->get();
+                    })->available()->active()->get();
             }
             else {
                 if($order->store !== null){
                     $deliveryMen = isset($order->zone_id) ? DeliveryMan::where('zone_id', $order->store->zone_id)->where(function($query)use($order){
-                            $query->where('vehicle_id',$order->dm_vehicle_id)
-                                ->orWhereNull('vehicle_id');
+                            $query->where('vehicle_id',$order->dm_vehicle_id)->orWhereNull('vehicle_id');
                     })
-                        ->where('id', '!=', $excludeDm)
-                        ->available()
-                        ->active()
-                        ->get():
-                        [];
+                    ->available()->active()->get():[];
                 } else{
-                    $deliveryMen = DeliveryMan::where('zone_id', '=', NULL)
-                        ->where('vehicle_id',$order->dm_vehicle_id)
-                        ->where('id', '!=', $excludeDm)
-                        ->active()
-                        ->get();
+                    $deliveryMen = DeliveryMan::where('zone_id', '=', NULL)->where('vehicle_id',$order->dm_vehicle_id)->active()->get();
                 }
             }
             $category = $request->query('category_id', 0);
@@ -289,7 +275,7 @@ class OrderController extends Controller
             }
 
             $deliveryMen = Helpers::deliverymen_list_formatting($deliveryMen);
-            return view($order->order_type == 'parcel' ? 'admin-views.order.parcel-order-view' : 'admin-views.order.order-view', compact('order', 'deliveryMen', 'categories', 'products', 'category', 'keyword', 'editing'));
+            return view('admin-views.order.order-view', compact('order', 'deliveryMen', 'categories', 'products', 'category', 'keyword', 'editing'));
         } else {
             Toastr::info(translate('messages.no_more_orders'));
             return back();
@@ -344,7 +330,7 @@ class OrderController extends Controller
             }
 
             $deliveryMen = Helpers::deliverymen_list_formatting($deliveryMen);
-            return view($order->order_type == 'parcel' ? 'admin-views.order.parcel-order-view' : 'admin-views.order.order-view', compact('order', 'deliveryMen', 'categories', 'products', 'category', 'keyword', 'editing'));
+            return view('admin-views.order.order-view', compact('order', 'deliveryMen', 'categories', 'products', 'category', 'keyword', 'editing'));
         } else {
             Toastr::info(translate('messages.no_more_orders'));
             return back();
@@ -562,8 +548,6 @@ class OrderController extends Controller
 
                 OrderLogic::refund_before_delivered($order);
             }
-        } else if ( $order->order_type != 'parcel' && in_array($request->order_status, ['picked_up']) ) {
-            Helpers::sendOrderDeliveryVerificationOtp($order);
         }
         $order->order_status = $request->order_status;
         if($request->order_status == 'processing') {
@@ -1007,7 +991,7 @@ class OrderController extends Controller
             $addon_data = Helpers::calculate_addon_price(\App\Models\AddOn::withoutGlobalScope(StoreScope::class)->whereIn('id', $add_ons)->get(), $add_on_qtys);
             $data['add_ons'] = json_encode($addon_data['addons']);
             $data['total_add_on_price'] = $addon_data['total_add_on_price'];
-
+//             dd($data);
 
             $cart = $request->session()->get('order_cart', collect([]));
             if (isset($request->cart_item_key)) {
@@ -1308,7 +1292,10 @@ class OrderController extends Controller
         $order->coupon_discount_amount = $coupon_discount_amount;
         $order->store_discount_amount = $store_discount_amount;
         $order->total_tax_amount = $total_tax_amount;
-        $order->order_amount = $total_order_ammount;
+        // $order->order_amount = $total_order_ammount;
+        //edited line start
+        $order->order_amount = Helpers::round_to_50_or_next_int($total_order_ammount);
+        //edited line end
         $order->adjusment = $adjustment;
         $order->edited = true;
         $order->save();
@@ -1922,92 +1909,4 @@ class OrderController extends Controller
 
         return view('admin-views.order.offline_verification_list', compact('orders', 'status'));
     }
-    public function parcelCancellationReason(Request $request)
-    {
-     $reasons = ParcelCancellationReason::where('status', 1)
-            ->select('id', 'reason', 'user_type', 'cancellation_type')
-            ->when($request->user_type, function ($query) use ($request) {
-                $query->where('user_type', $request->user_type);
-            })
-            ->when($request->cancellation_type, function ($query) use ($request) {
-                $query->where('cancellation_type', $request->cancellation_type);
-            })
-            ->limit(50)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id'                => $item->id,
-                    'reason'            => $item->reason,
-                    'user_type'         => $item->user_type,
-                    'cancellation_type' => $item->cancellation_type,
-                ];
-            });
-
-        return response()->json([
-            'view' => view('admin-views.order.partials._parcel_cancellation_reasons', compact('reasons'))->render()
-        ]);
-
-    }
-
-    public function CancelParcel(Request $request)
-    {
-        if($request->reason == null && $request->note == null){
-            Toastr::error(translate('messages.please_select_cancellation_reason_or_add_a_comment'));
-            return back();
-        }
-
-        $order = Order::findOrFail($request->order_id);
-        $cancel_parcel_order = OrderLogic::cancelParcelOrder($order, 'admin_for_'.$request->delivery_cancelled_by, $request);
-
-        if (data_get($cancel_parcel_order, 'status_code') != 200) {
-            Toastr::error(data_get($cancel_parcel_order, 'message'));
-        } else {
-            if (data_get($cancel_parcel_order, 'code')== 'wallet_failed'){
-                Toastr::success(translate('Parcel_canceled_successfully'));
-            }else{
-                Toastr::success(data_get($cancel_parcel_order, 'message'));
-            }
-        }
-        return back();
-    }
-
-    public function parcelRefund(Request $request)
-    {
-        $order = Order::with('parcelCancellation')->findOrFail($request->id);
-        $order->parcelCancellation()->update([
-            'is_refunded' => 1,
-            'refund_amount' => $request->refund_amount ?? $order->order_amount,
-        ]);
-
-        // $order->order_status = 'returned';
-        // $order->save();
-        OrderLogic::parcelRefundNotification($order,false);
-        Toastr::success(translate('Parcel_refunded_successfully'));
-        return back();
-    }
-    public function parcelReturn(Request $request)
-    {
-        $request->validate([
-            'id' => 'required',
-            'order_status' => 'required|in:returned',
-        ]);
-
-        $order = Order::with('parcelCancellation')->findOrFail($request->id);
-        if( $order && $order->order_status == 'canceled' && $order->order_type == 'parcel'){
-            if( in_array($order->parcelCancellation->cancel_by ,['deliveryman', 'admin_for_deliveryman']  )){
-                OrderLogic::deliveryManCancelParcelTransaction($order,'admin');
-            } else{
-                OrderLogic::create_transaction_parcel_cancel($order, $order->payment_status == 'paid' ? 'admin' : 'deliveryman', );
-            }
-
-            Toastr::success(translate('Parcel_returned_successfully'));
-            return back();
-        }
-            Toastr::error(translate('Order_not_found'));
-        return back();
-    }
-
-
-
-
 }
