@@ -1,0 +1,178 @@
+        public static function getNotificationStatusDataAdmin($user_type,$key){
+        public static function getPriorityList($name,$type, $relations = [],$json_decode=false)
+        public static function get_business_settings($key, $json_decode = true,$relations = [])
+        public static function subscriptionNotifications($store,$type ,$subscription_transaction ){
+      public static function checkAdminDiscount($price, $discount, $max_discount, $min_purchase, $item_wise_price = null)
+     public static function getCusromerFirstOrderDiscount($order_count, $user_creation_date,$refby, $price = null){
+    // public static function export_attributes($collection){
+    // public static function get_business_settings($name)
+    public static function Export_generator($datas) {
+    public static function activation_submit($purchase_key)
+    public static function addNewAdminNotificationSetupDataSetup(){
+    public static function add_fund_push_notification($user_id){
+    public static function add_or_update_translations($request, $key_data,$name_field ,$model_name, $data_id,$data_value , $model_class = false){
+    public static function addon_data_formatting($data, $multi_data = false, $trans = false, $local = 'en')
+    public static function address_data_formatting($data)
+    public static function apple_client_secret(){
+    public static function auto_translator($q, $sl, $tl)
+    public static function basic_campaign_data_formatting($data, $multi_data = false)
+    public static function businessInsert($data)
+    public static function businessUpdateOrInsert($key, $value)
+    public static function calculateSubscriptionRefundAmount($store,$return_data=null){
+    public static function calculate_addon_price($addons, $add_on_qtys)
+    public static function cart_product_data_formatting($data, $selected_variation, $selected_addons,
+    public static function category_data_formatting($data, $multi_data = false, $trans = false)
+    public static function checkCurrency($data , $type= null){
+    public static function checkExternalConfiguration($externalBaseUrl, $externalTokem, $martToken)
+    public static function checkSelfExternalConfiguration()
+    public static function check_and_delete(string $dir, $old_image)
+    public static function combinations($arrays)
+    public static function createTransactionForTrip($trip, $received_by = false, $status = null)
+    public static function create_storage($model,$data_id){
+    public static function currency_code()
+    public static function currency_symbol()
+    public static function dataUpdateOrInsert($key, $value)
+    public static function date_format($data){
+    public static function day_part()
+    public static function default_lang()
+    public static function deleteCacheData($prefix)
+    public static function deliverymen_data_formatting($data)
+    public static function deliverymen_list_formatting($data)
+    public static function disableStoreForOrderCancellation()
+    public static function discount_calculate($product, $price)
+    public static function dm_rating_count($deliveryman_id, $rating)
+    public static function employee_module_permission_check($mod_name)
+    public static function env_key_replace($key_from, $key_to, $value)
+    public static function env_update($key, $value)
+    public static function error_formater($key, $mesage, $errors = [])
+    public static function error_processor($validator)
+    public static function expenseCreate($amount,$type,$datetime,$created_by,$order_id=null,$store_id=null,$description='',$delivery_man_id=null,$user_id=null)
+    public static function export_account_transaction($collection){
+    public static function export_addons($collection){
+    public static function export_categories($collection){
+    public static function export_customers($collection){
+    public static function export_day_wise_report($collection){
+    public static function export_delivery_men($collection){
+    public static function export_dm_earning($collection){
+    public static function export_expense_wise_report($collection){
+    public static function export_item_wise_report($collection){
+    public static function export_items($foods,$module_type){
+    public static function export_order_transaction_report($collection){
+    public static function export_stock_wise_report($collection){
+    public static function export_store_item($collection){
+    public static function export_store_withdraw($collection){
+    public static function export_stores($collection){
+    public static function export_units($collection){
+    public static function food_variation_price($product, $variations)
+    public static function format_coordiantes($coordinates)
+    public static function format_currency($value)
+    public static function gen_mpdf($view, $file_prefix, $file_postfix)
+    public static function generate_referer_code() {
+    public static function generate_reset_password_code() {
+    public static function getAccessToken($key)
+    public static function getActivePaymentGateways(){
+    public static function getCalculatedCashBackAmount($amount,$customer_id,$type=null){
+    public static function getDefaultPaymentMethods()
+    public static function getDisk()
+    public static function getLanguageCode(string $country_code): string
+    public static function getNextOpeningTime($schedule) {
+    public static function getNotificationStatusData($user_type,$key, $notification_type, $store_id = null){
+    public static function getRentalAdminNotificationSetupDatasetup(){
+    public static function getRentalNotificationStatusData($user_type,$key,$notification_type, $store_id= null){
+    public static function getRentalStoreNotificationStatusData($store_id,$key,$notification_type){
+    public static function getSettingsDataFromConfig($settings,$relations=[])
+    public static function getStoreNotificationStatusData($store_id,$key,$notification_type){
+    public static function getTaxSystemType($getTaxVatList = true,$tax_payer='vendor'){
+    public static function get_addon_data($id){
+    public static function get_attributes($choice_options){
+    public static function get_business_data($name)
+    public static function get_category_name($id){
+    public static function get_customer_name($id){
+    public static function get_edit_varient(array $product_variations, $variations)
+    public static function get_external_data($name)
+    public static function get_food_price_range($product, $discount = false)
+    public static function get_food_variations($variations){
+    public static function get_full_url($path,$data,$type,$placeholder = null){
+    public static function get_language_name($key)
+    public static function get_loggedin_user()
+    public static function get_login_url($type){
+    public static function get_mail_status($name)
+    public static function get_module_name($id){
+    public static function get_price_range($product, $discount = false)
+    public static function get_product_discount($product)
+    public static function get_settings($name)
+    public static function get_store_data()
+    public static function get_store_discount($store)
+    public static function get_store_id()
+    public static function get_stores_name($stores){
+    public static function get_sub_category_name($id){
+    public static function get_varient(array $product_variations, $variations)
+    public static function get_vendor_data()
+    public static function get_vendor_id()
+    public static function get_view_keys()
+    public static function get_zones_name($zones){
+    public static function hex_to_rbg($color){
+    public static function increment_order_count($store){
+    public static function insert_business_settings_key($key, $value = null)
+    public static function insert_data_settings_key($key,$type, $value = null)
+    public static function landing_language_load()
+    public static function language_load()
+    public static function max_earning()
+    public static function max_orders()
+    public static function minDiscountCheck($productPrice, $discount)
+    public static function module_permission_check($mod_name)
+    public static function notificationDataSetup(){
+    public static function number_format_short( $n ) {
+    public static function offline_payment_formater($user_data){
+    public static function order_data_formatting($data, $multi_data = false)
+    public static function order_details_data_formatting($data)
+    public static function order_status_update_message($status,$module_type, $lang='en')
+    public static function pagination_limit()
+    public static function parcel_category_data_formatting($data, $multi_data = false)
+    public static function pos_variation_price($product, $variation)
+    public static function preparePaginatedResponse($pagination, $limit, $offset, $key = 'data', $extraData = []): array
+    public static function productListDataFormatting($data)
+    public static function product_data_formatting($data, $multi_data = false, $trans = false, $local = 'en' , $temp_product=false)
+    public static function product_data_formatting_translate($data, $multi_data = false, $trans = false, $local = 'en')
+    public static function product_discount_calculate($product, $price, $store , $check_store_discount = true)
+    public static function product_tax($price , $tax, $is_include=false){
+    public static function rating_count($item_id, $rating)
+    public static function react_activation_check($react_domain, $react_license_code){
+    public static function react_domain_status_check(){
+    public static function referer_code_exists($ref_code) {
+    public static function remove_invalid_charcaters($str)
+    public static function requestSender()
+    public static function reset_password_code_exists($code) {
+    public static function round_to_50_or_next_int(float $amount): float
+    public static function schedule_order()
+    public static function sendNotificationToHttp(array|null $data)
+    public static function sendOrderStatusWhatsAppNotification($order)
+    public static function sendStoreEmployeeNotification($order, $data)
+    public static function sendTripPaymentNotificationCustomerMain($trip)
+    public static function sendUserWhatsAppNotification($order)
+    public static function sendVendorWhatsAppItemList($order)
+    public static function send_order_notification($order)
+    public static function send_push_notif_for_demo_reset($data, $topic, $type,)
+    public static function send_push_notif_to_device($fcm_token, $data, $web_push_link = null)
+    public static function send_push_notif_to_topic($data, $topic, $type,$web_push_link = null)
+    public static function setEnvironmentValue($envKey, $envValue)
+    public static function storeNotificationDataSetup($id){
+    public static function storeRentalNotificationDataSetup($id){
+    public static function store_data_formatting($data, $multi_data = false)
+    public static function subscriptionConditionsCheck($store_id ,$package_id,){
+    public static function subscriptionPayment($store_id,$package_id,$payment_gateway,$url,$pending_bill=0,$type='payment',$payment_platform='web'){
+    public static function subscription_plan_chosen($store_id ,$package_id, $payment_method  ,$discount = 0,$pending_bill =0,$reference=null ,$type=null){
+    public static function system_default_direction()
+    public static function system_default_language()
+    public static function tax_calculate($item, $price)
+    public static function text_variable_data_format($value,$user_name=null,$store_name=null,$delivery_man_name=null,$transaction_id=null,$order_id=null,$add_id= null)
+    public static function time_date_format($data){
+    public static function time_format($data){
+    public static function update(string $dir, $old_image, string $format, $image = null)
+    public static function updateAdminNotificationSetupDataSetup(){
+    public static function updateStorageTable($dataType, $dataId, $image)
+    public static function upload(string $dir, string $format, $image = null)
+    public static function variation_price($product, $variation)
+    public static function vendor_language_load()
+    public static function wishlist_data_formatting($data, $multi_data = false)
+  public static function getFinalCalculatedTax($details_data, $additionalCharges, $totalDiscount, $price, $storeId, $storeData = true)
