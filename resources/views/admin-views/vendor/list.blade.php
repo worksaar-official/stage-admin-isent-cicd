@@ -161,6 +161,7 @@
                     <tr>
                         <th class="border-0">{{translate('sl')}}</th>
                         <th class="border-0">{{translate('messages.store_information')}}</th>
+						<th class="border-0">{{translate('messages.store_code')}}</th>
                         <th class="border-0">{{translate('messages.owner_information')}}</th>
                         <th class="border-0">{{translate('messages.zone')}}</th>
                         <th class="text-uppercase border-0">{{translate('messages.featured')}}</th>
@@ -191,7 +192,9 @@
                                     </a>
                                 </div>
                             </td>
-
+							 <td>
+                                {{$store->store_code}}
+                            </td>
                             <td>
                                 <span title="{{ $store?->vendor?->f_name.' '.$store?->vendor?->l_name }}" class="d-block font-size-sm text-body">
                                     {{Str::limit($store->vendor->f_name.' '.$store->vendor->l_name,20,'...')}}
