@@ -1,3 +1,4 @@
+<!-- // day table -->
 @foreach ($order_transactions as $k => $ot)
 <tr scope="row">
     <td>{{ $k + 1 }}</td>
