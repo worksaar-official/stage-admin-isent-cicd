@@ -37,6 +37,7 @@ class POSController extends Controller
 
         $order_details = [];
         $order = new Order();
+        $order->order_source = 'isent_pos'; // Orders from vendor POS Web
         $order->id = 100000 + Order::all()->count() + 1;
         if (Order::find($order->id)) {
             $order->id = Order::latest()->first()->id + 1;
