@@ -12,6 +12,7 @@ use App\Models\Vendor;
 use App\Models\Message;
 use App\Models\UserInfo;
 use App\Scopes\StoreScope;
+use App\Models\AdminWallet;
 use App\Models\DataSetting;
 use App\Models\StoreConfig;
 use App\Models\StoreWallet;
@@ -40,6 +41,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Modules\Rental\Entities\TripTransaction;
 use Rap2hpoutre\FastExcel\FastExcel;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Exports\DisbursementHistoryExport;
@@ -66,35 +68,31 @@ class VendorController extends Controller
             'l_name' => 'nullable|max:100',
             'name.0' => 'required',
             'name.*' => 'max:191',
-            'address.0' => 'required',
-            'address.*' => 'max:1000',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+			'store_code' => 'required|unique:stores',
+            'address' => 'required|max:1000',
+            'latitude' => 'required',
+            'longitude' => 'required',
             'email' => 'required|unique:vendors',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:20|unique:vendors',
             'minimum_delivery_time' => 'required',
             'maximum_delivery_time' => 'required',
             'delivery_time_type'=>'required',
-            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols(),
+            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised(),
                 function ($attribute, $value, $fail) {
                     if (strpos($value, ' ') !== false) {
                         $fail('The :attribute cannot contain white spaces.');
                     }
                 },],
             'zone_id' => 'required',
-            'logo' => 'required|image|max:2048|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
-            'cover_photo' => 'nullable|image|max:2048|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
-
+            // 'module_id' => 'required',
+            'logo' => 'required',
+            'tin' => 'required',
+            'tin_expire_date' => 'required',
+            'tin_certificate_image' => 'required',
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
             'name.0.required'=>translate('default_name_is_required'),
-            'address.0.required'=>translate('default_address_is_required'),
         ]);
-
-
-      if ($validator->fails()) {
-           return response()->json(['errors' => Helpers::error_processor($validator)]);
-        }
 
         if($request->zone_id)
         {
@@ -104,19 +102,23 @@ class VendorController extends Controller
             ->first();
             if(!$zone){
                 $validator->getMessageBag()->add('latitude', translate('messages.coordinates_out_of_zone'));
-            return response()->json(['errors' => Helpers::error_processor($validator)]);
+                return back()->withErrors($validator)
+                        ->withInput();
             }
         }
-
         if ($request->delivery_time_type == 'min') {
             $minimum_delivery_time = (int) $request->input('minimum_delivery_time');
             if ($minimum_delivery_time < 10) {
                 $validator->getMessageBag()->add('minimum_delivery_time', translate('messages.minimum_delivery_time_should_be_more_than_10_min'));
-            return response()->json(['errors' => Helpers::error_processor($validator)]);
+                return back()->withErrors($validator)
+                        ->withInput();
             }
         }
-
-
+        if ($validator->fails()) {
+            return back()
+            ->withErrors($validator)
+            ->withInput();
+        }
 
         $vendor = new Vendor();
         $vendor->f_name = $request->f_name;
@@ -141,8 +143,11 @@ class VendorController extends Controller
         $store->tin_expire_date = $request->tin_expire_date;
         $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
         $store->tin_certificate_image = Helpers::upload('store/', $extension, $request->file('tin_certificate_image'));
+        $store->api_key = $request->api_key;
+        $store->webhook_url = $request->webhook_url;
         $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
         $store->module_id = Config::get('module.current_module_id');
+		$store->store_code = $request->store_code;
         try {
             $store->save();
             // $store->module->increment('stores_count');
@@ -150,16 +155,60 @@ class VendorController extends Controller
             {
                 StoreLogic::insert_schedule($store->id);
             }
-
-        Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);
-        Helpers::add_or_update_translations(request: $request, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store->id, data_value: $store->address);
-
+            $default_lang = str_replace('_', '-', app()->getLocale());
+            $data = [];
+            foreach ($request->lang as $index => $key) {
+                if($default_lang == $key && !($request->name[$index])){
+                    if ($key != 'default') {
+                        array_push($data, array(
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'name',
+                            'value' => $store->name,
+                        ));
+                    }
+                }else{
+                    if ($request->name[$index] && $key != 'default') {
+                        array_push($data, array(
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'name',
+                            'value' => $request->name[$index],
+                        ));
+                    }
+                }
+                if($default_lang == $key && !($request->address[$index])){
+                    if ($key != 'default') {
+                        array_push($data, array(
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'address',
+                            'value' => $store->address,
+                        ));
+                    }
+                }else{
+                    if ($request->address[$index] && $key != 'default') {
+                        array_push($data, array(
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'address',
+                            'value' => $request->address[$index],
+                        ));
+                    }
+                }
+            }
+            Translation::insert($data);
+            // $store->zones()->attach($request->zone_ids);
+            //code...
         } catch (\Exception $ex) {
             info($ex->getMessage());
-            $validator->getMessageBag()->add('store_add', $ex->getMessage());
-            return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
-      return response()->json(200);
+        Toastr::success(translate('messages.store_added_successfully'));
+        return redirect('admin/store/list');
     }
 
     public function edit($id)
@@ -178,35 +227,26 @@ class VendorController extends Controller
         $validator = Validator::make($request->all(), [
             'f_name' => 'required|max:100',
             'l_name' => 'nullable|max:100',
-              'name.0' => 'required',
-            'name.*' => 'max:191',
-            'address.0' => 'required',
-            'address.*' => 'max:1000',
+            'name' => 'required|max:191',
+			'store_code' => 'required|unique:stores,store_code,'.$store->id,
             'email' => 'required|unique:vendors,email,'.$store->vendor->id,
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:20|unique:vendors,phone,'.$store->vendor->id,
             'zone_id'=>'required',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols(),function ($attribute, $value, $fail) {
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'tin' => 'required',
+            'tin_expire_date' => 'required',
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised(),function ($attribute, $value, $fail) {
                 if (strpos($value, ' ') !== false) {
                     $fail('The :attribute cannot contain white spaces.');
                 }
             },],
             'minimum_delivery_time' => 'required',
             'maximum_delivery_time' => 'required',
-            'delivery_time_type'=>'required',
-            'logo' => 'nullable|image|max:2048|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
-            'cover_photo' => 'nullable|image|max:2048|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
+            'delivery_time_type'=>'required'
         ], [
-            'f_name.required' => translate('messages.first_name_is_required'),
-            'name.0.required'=>translate('default_name_is_required'),
-            'address.0.required'=>translate('default_address_is_required'),
+            'f_name.required' => translate('messages.first_name_is_required')
         ]);
-
-           if ($validator->fails()) {
-           return response()->json(['errors' => Helpers::error_processor($validator)]);
-
-        }
 
         if($request->zone_id)
         {
@@ -216,18 +256,24 @@ class VendorController extends Controller
             ->first();
             if(!$zone){
                 $validator->getMessageBag()->add('latitude', translate('messages.coordinates_out_of_zone'));
-                 return response()->json(['errors' => Helpers::error_processor($validator)]);
+                return back()->withErrors($validator)
+                        ->withInput();
             }
         }
         if ($request->delivery_time_type == 'min') {
             $minimum_delivery_time = (int) $request->input('minimum_delivery_time');
             if ($minimum_delivery_time < 10) {
                 $validator->getMessageBag()->add('minimum_delivery_time', translate('messages.minimum_delivery_time_should_be_more_than_10_min'));
-                return response()->json(['errors' => Helpers::error_processor($validator)]);
+                return back()->withErrors($validator)
+                        ->withInput();
             }
         }
 
-
+        if ($validator->fails()) {
+            return back()
+                    ->withErrors($validator)
+                    ->withInput();
+        }
         $vendor = Vendor::findOrFail($store->vendor->id);
         $vendor->f_name = $request->f_name;
         $vendor->l_name = $request->l_name;
@@ -251,12 +297,63 @@ class VendorController extends Controller
         $store->tin_expire_date = $request->tin_expire_date;
         $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
         $store->tin_certificate_image = $request->has('tin_certificate_image') ? Helpers::update('store/', $store->tin_certificate_image, $extension, $request->file('tin_certificate_image')) : $store->tin_certificate_image;
+        $store->api_key = $request->api_key;
+        $store->webhook_url = $request->webhook_url;
         $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
+		$store->store_code = $request->store_code;
         $store->save();
+        $default_lang = str_replace('_', '-', app()->getLocale());
+        foreach($request->lang as $index=>$key)
+        {
+            if($default_lang == $key && !($request->name[$index])){
+                if ($key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'name'
+                        ],
+                        ['value' => $store->name]
+                    );
+                }
+            }else{
 
-        Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);
-        Helpers::add_or_update_translations(request: $request, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store->id, data_value: $store->address);
+                if ($request->name[$index] && $key != 'default') {
+                    Translation::updateOrInsert(
+                        ['translationable_type'  => 'App\Models\Store',
+                            'translationable_id'    => $store->id,
+                            'locale'                => $key,
+                            'key'                   => 'name'],
+                        ['value'                 => $request->name[$index]]
+                    );
+                }
+            }
+            if($default_lang == $key && !($request->address[$index])){
+                if ($key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\Store',
+                            'translationable_id' => $store->id,
+                            'locale' => $key,
+                            'key' => 'address'
+                        ],
+                        ['value' => $store->address]
+                    );
+                }
+            }else{
 
+                if ($request->address[$index] && $key != 'default') {
+                    Translation::updateOrInsert(
+                        ['translationable_type'  => 'App\Models\Store',
+                            'translationable_id'    => $store->id,
+                            'locale'                => $key,
+                            'key'                   => 'address'],
+                        ['value'                 => $request->address[$index]]
+                    );
+                }
+            }
+        }
         if ($vendor->userinfo) {
             $userinfo = $vendor->userinfo;
             $userinfo->f_name = $store->name;
@@ -265,17 +362,8 @@ class VendorController extends Controller
             $userinfo->image = $store->logo;
             $userinfo->save();
         }
-
-
-        if($request->approve_vendor == 1){
-            $request->merge([
-                'status' => 1,
-                'id' => $store->id,
-            ]);
-            $this->updateVendorApplication($request);
-        }
-
-        return response()->json(500);
+        Toastr::success(translate('messages.store_updated_successfully'));
+        return redirect('admin/store/list');
     }
 
     public function destroy(Request $request, Store $store)
@@ -350,11 +438,6 @@ class VendorController extends Controller
         }
         if($tab == 'settings')
         {
-            if($store->module->module_type == 'ecommerce' && !StoreSchedule::where('store_id', $store->id)->exists())
-            {
-                StoreLogic::insert_schedule($store->id);
-            }
-
             return view('admin-views.vendor.view.settings', compact('store'));
         }
         else if($tab == 'order')
@@ -573,13 +656,15 @@ class VendorController extends Controller
                             $q->orWhere('f_name', 'like', "%{$value}%")
                                 ->orWhere('l_name', 'like', "%{$value}%")
                                 ->orWhere('email', 'like', "%{$value}%")
-                                ->orWhere('phone', 'like', "%{$value}%");
+                                ->orWhere('phone', 'like', "%{$value}%")
+                                ->orWhere('store_code', 'like', "%{$value}%");
                         }
                     });
                 })->orWhere(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%")
                             ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('store_code', 'like', "%{$value}%")
                             ->orWhere('phone', 'like', "%{$value}%");
                     }
                 });
@@ -595,7 +680,7 @@ class VendorController extends Controller
         ->first();
 
         $total_transaction = $result->total_transaction;
-        $comission_earned = max(0,$result->commission_earned);
+        $comission_earned = $result->commission_earned;
 
         $store_withdraws = WithdrawRequest::wherehas('store', function($query){
             $query->where('module_id', Config::get('module.current_module_id'));
@@ -609,59 +694,84 @@ class VendorController extends Controller
 
     public function pending_requests(Request $request)
     {
-        $stores = $this->getNewStores($request, null);
-        $zone_id = $request->query('zone_id', 'all');
-        $type = $request->query('type', 'all');
-        $search_by = $request->query('search_by');
-         $zone = is_numeric($zone_id)?Zone::findOrFail($zone_id):null;
-        return view('admin-views.vendor.pending_requests', compact('stores', 'zone','type', 'search_by'));
-    }
-
-    private function getNewStores($request, $storeApproveStatus){
-
         $zone_id = $request->query('zone_id', 'all');
         $search_by = $request->query('search_by');
         $key = explode(' ', $search_by);
         $type = $request->query('type', 'all');
         $module_id = $request->query('module_id', 'all');
-
-
-        $stores = Store::with('vendor:id,f_name,l_name,status','module:id,module_name','zone:id,name')->whereHas('vendor', function($query) use($storeApproveStatus){
-                    return $query->where('status', $storeApproveStatus);
-                })
-                ->when(is_numeric($zone_id), function($query)use($zone_id){
-                        return $query->where('zone_id', $zone_id);
-                })
-                ->when(is_numeric($module_id), function($query)use($request){
-                    return $query->module($request->query('module_id'));
-                })
-                ->when($search_by, function($query)use($key){
-                    return $query->where(function($query)use($key){
-                        $query->orWhereHas('vendor',function ($q) use ($key) {
-                            $q->where(function($q)use($key){
-                                foreach ($key as $value) {
-                                    $q->orWhereAny([ 'f_name', 'l_name', 'email', 'phone' ], 'like', "%{$value}%");
-                                }
-                            });
-                        })->orWhere(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhereAny([  'name', 'email', 'phone'], 'like', "%{$value}%");
-                            }
-                        });
+        $stores = Store::with('vendor','module')->whereHas('vendor', function($query){
+            return $query->where('status', null);
+        })
+        ->when(is_numeric($zone_id), function($query)use($zone_id){
+                return $query->where('zone_id', $zone_id);
+        })
+        ->when(is_numeric($module_id), function($query)use($request){
+            return $query->module($request->query('module_id'));
+        })
+        ->when($search_by, function($query)use($key){
+            return $query->where(function($query)use($key){
+                $query->orWhereHas('vendor',function ($q) use ($key) {
+                    $q->where(function($q)use($key){
+                        foreach ($key as $value) {
+                            $q->orWhere('f_name', 'like', "%{$value}%")
+                                ->orWhere('l_name', 'like', "%{$value}%")
+                                ->orWhere('email', 'like', "%{$value}%")
+                                ->orWhere('phone', 'like', "%{$value}%");
+                        }
                     });
-                })
-                ->module(Config::get('module.current_module_id'))
-                ->type($type)->latest()->paginate(config('default_pagination'));
-
-        return $stores;
+                })->orWhere(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('name', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('phone', 'like', "%{$value}%");
+                    }
+                });
+            });
+        })
+        ->module(Config::get('module.current_module_id'))
+        ->type($type)->latest()->paginate(config('default_pagination'));
+        $zone = is_numeric($zone_id)?Zone::findOrFail($zone_id):null;
+        return view('admin-views.vendor.pending_requests', compact('stores', 'zone','type', 'search_by'));
     }
 
     public function deny_requests(Request $request)
     {
         $search_by = $request->query('search_by');
+        $key = explode(' ', $search_by);
         $zone_id = $request->query('zone_id', 'all');
         $type = $request->query('type', 'all');
-        $stores = $this->getNewStores($request, 0);
+        $module_id = $request->query('module_id', 'all');
+        $stores = Store::with('vendor','module')->whereHas('vendor', function($query){
+            return $query->where('status', 0);
+        })
+        ->when(is_numeric($zone_id), function($query)use($zone_id){
+                return $query->where('zone_id', $zone_id);
+        })
+        ->when(is_numeric($module_id), function($query)use($request){
+            return $query->module($request->query('module_id'));
+        })
+        ->when($search_by, function($query)use($key){
+            return $query->where(function($query)use($key){
+                $query->orWhereHas('vendor',function ($q) use ($key) {
+                    $q->where(function($q)use($key){
+                        foreach ($key as $value) {
+                            $q->orWhere('f_name', 'like', "%{$value}%")
+                                ->orWhere('l_name', 'like', "%{$value}%")
+                                ->orWhere('email', 'like', "%{$value}%")
+                                ->orWhere('phone', 'like', "%{$value}%");
+                        }
+                    });
+                })->orWhere(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('name', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('phone', 'like', "%{$value}%");
+                    }
+                });
+            });
+        })
+        ->module(Config::get('module.current_module_id'))
+        ->type($type)->latest()->paginate(config('default_pagination'));
         $zone = is_numeric($zone_id)?Zone::findOrFail($zone_id):null;
         return view('admin-views.vendor.deny_requests', compact('stores', 'zone','type', 'search_by'));
     }
@@ -732,6 +842,10 @@ class VendorController extends Controller
         $data = Store::whereHas('module', function($q)use($request){
             $q->whereNot('module_type', 'rental');
         })->
+        // withOutGlobalScopes()
+        // ->
+        // join('zones', 'zones.id', '=', 'stores.zone_id')
+        // ->
         when($zone_ids, function($query) use($zone_ids){
             $query->whereIn('stores.zone_id', [$zone_ids]);
         })
@@ -1016,50 +1130,41 @@ class VendorController extends Controller
 
     public function update_application(Request $request)
     {
-        $this->updateVendorApplication($request);
+        $store = Store::findOrFail($request->id);
+        $store->vendor->status = $request->status;
+        $store->vendor->save();
+        if($request->status) $store->status = 1;
+
+        $add_days= 1;
+        if($store?->store_sub_update_application){
+            if($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1){
+                $add_days= BusinessSetting::where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
+            }elseif($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0){
+                $add_days=$store?->store_sub_update_application->validity;
+            }
+                $store?->store_sub_update_application->update([
+                    'expiry_date'=> Carbon::now()->addDays($add_days)->format('Y-m-d'),
+                    'status'=>1
+                ]);
+            $store->store_business_model= 'subscription';
+        }
+        $store->save();
+        try{
+            if($request->status==1){
+                if ( config('mail.status') && Helpers::get_mail_status('approve_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_approval','mail_status')) {
+                    Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('approved', $store->vendor->f_name.' '.$store->vendor->l_name));
+                }
+            }else{
+                if ( config('mail.status') &&  Helpers::get_mail_status('deny_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_deny','mail_status')) {
+                    Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('denied', $store->vendor->f_name.' '.$store->vendor->l_name));
+                }
+            }
+        }catch(\Exception $ex){
+            info($ex->getMessage());
+        }
         Toastr::success(translate('messages.application_status_updated_successfully'));
-        return redirect(route('admin.store.pending-requests'));
+        return back();
     }
-
-
-
-    private function updateVendorApplication($request){
-            $store = Store::findOrFail($request->id);
-            $store->vendor->status = $request->status;
-            $store->vendor->rejection_note = $request->rejection_note;
-            $store->vendor->save();
-            if($request->status) $store->status = 1;
-
-            $add_days= 1;
-            if($store?->store_sub_update_application){
-                if($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1){
-                    $add_days= BusinessSetting::where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
-                }elseif($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0){
-                    $add_days=$store?->store_sub_update_application->validity;
-                }
-                    $store?->store_sub_update_application->update([
-                        'expiry_date'=> Carbon::now()->addDays((int) $add_days)->format('Y-m-d'),
-                        'status'=>1
-                    ]);
-                $store->store_business_model= 'subscription';
-            }
-            $store->save();
-            try{
-                if($request->status==1){
-                    if ( config('mail.status') && Helpers::get_mail_status('approve_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_approval','mail_status')) {
-                        Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('approved', $store->vendor->f_name.' '.$store->vendor->l_name));
-                    }
-                }else{
-                    if ( config('mail.status') &&  Helpers::get_mail_status('deny_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration_deny','mail_status')) {
-                        Mail::to($store?->vendor?->email)->send(new \App\Mail\VendorSelfRegistration('denied', $store->vendor->f_name.' '.$store->vendor->l_name));
-                    }
-                }
-            }catch(\Exception $ex){
-                info($ex->getMessage());
-            }
-            return true;
-    }
-
 
     public function cleardiscount(Store $store)
     {
