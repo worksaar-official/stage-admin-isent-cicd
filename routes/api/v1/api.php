@@ -1,6 +1,9 @@
 <?php
 
+use App\WebSockets\Handler\DMLocationSocketHandler;
 use Illuminate\Support\Facades\Route;
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
+use App\Http\Controllers\Admin\POSController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +38,7 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
     Route::get('offline_payment_method_list', 'ConfigController@offline_payment_method_list');
     Route::group(['prefix' => 'auth', 'namespace' => 'Auth'], function () {
         Route::post('sign-up', 'CustomerAuthController@register');
+        Route::post('register', 'UserRegisterController@register');
         Route::post('login', 'CustomerAuthController@login');
         Route::post('external-login', 'CustomerAuthController@customerLoginFromDrivemond');
         Route::post('verify-phone', 'CustomerAuthController@verify_phone_or_email');
@@ -112,7 +116,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
             Route::get('order', 'DeliverymanController@get_order');
             Route::put('send-order-otp', 'DeliverymanController@send_order_otp');
             Route::put('update-fcm-token', 'DeliverymanController@update_fcm_token');
-            Route::post('parcel-return', 'DeliverymanController@parcelReturn');
             //Remove account
             Route::delete('remove-account', 'DeliverymanController@remove_account');
 
@@ -127,11 +130,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
                 Route::post('make-default', 'DeliverymanController@disbursement_withdrawal_method_default');
                 Route::delete('delete', 'DeliverymanController@disbursement_withdrawal_method_delete');
             });
-
-
-            Route::get('get-withdraw-list', 'DeliverymanController@withdraw_list');
-            Route::post('request-withdraw', 'DeliverymanController@request_withdraw');
-            Route::post('add-return-date', 'DeliverymanController@addReturnDate');
 
 
             Route::post('make-collected-cash-payment', 'DeliverymanController@make_payment')->name('make_payment');
@@ -312,8 +310,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
         Route::get('place-api-details', 'ConfigController@place_api_details');
         Route::get('geocode-api', 'ConfigController@geocode_api');
         Route::get('get-PaymentMethods', 'ConfigController@getPaymentMethods');
-        Route::get('get-analytic-scripts', 'ConfigController@analyticScripts');
-
     });
 
     Route::group(['prefix' => 'testimonial'], function () {
@@ -321,6 +317,29 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
 
     });
 
+     // Order Create API with Store Integration
+    Route::group(['prefix' => 'order-create'], function () {
+        Route::post('/', 'OrderCreateController@createOrder');
+		Route::put('update-status', 'OrderCreateController@update_order_status');
+        Route::get('/order/{order_id}', 'OrderCreateController@getOrder');
+        Route::get('/order/{order_id}/tracking', 'OrderCreateController@getOrderTracking');
+        Route::get('/store/{store_id}/details', 'OrderCreateController@getStoreDetails');
+    });
+
+    // Scheduled Order Create API with Store Integration
+    Route::group(['prefix' => 'schedule-order-create'], function () {
+        Route::post('/', 'ScheduleOrderCreateController@createScheduledOrder');
+        Route::get('/order/{order_id}', 'ScheduleOrderCreateController@getScheduledOrder');
+        Route::get('/order/{order_id}/tracking', 'ScheduleOrderCreateController@getScheduledOrderTracking');
+        Route::get('/user/orders', 'ScheduleOrderCreateController@getUserScheduledOrders');
+        Route::put('/order/{order_id}/cancel', 'ScheduleOrderCreateController@cancelScheduledOrder');
+    });
+
+    // Item Create API
+    Route::group(['prefix' => 'item-create'], function () {
+        Route::post('/', 'ItemCreateController@createItem');
+    });
+  
     Route::get('customer/order/cancellation-reasons', 'OrderController@cancellation_reason');
     Route::get('customer/automated-message', 'OrderController@automatedMessage');
 
@@ -400,12 +419,11 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
                 Route::put('cancel', 'OrderController@cancel_order');
                 Route::post('refund-request', 'OrderController@refund_request');
                 Route::get('refund-reasons', 'OrderController@refund_reasons');
-                Route::get('track', 'OrderController@track_order')->withoutMiddleware('auth:apiGuestCheck');
+                Route::get('track', 'OrderController@track_order');
                 Route::put('payment-method', 'OrderController@update_payment_method');
                 Route::put('offline-payment', 'OrderController@offline_payment');
                 Route::put('offline-payment-update', 'OrderController@update_offline_payment_info');
                 Route::post('get-surge-price', 'OrderController@getSurgePriceAmount');
-                Route::post('parcel-return', 'OrderController@parcelReturn');
 
             });
 
@@ -518,6 +536,7 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
     });
     Route::get('vehicle/extra_charge', 'ConfigController@extra_charge');
     Route::get('get-vehicles', 'ConfigController@get_vehicles');
-    Route::get('get-parcel-cancellation-reasons', 'ConfigController@parcel_cancellation_reason');
 });
 
+WebSocketsRouter::webSocket('/delivery-man/live-location', DMLocationSocketHandler::class);
+Route::post('/delivery/calculate', [POSController::class, 'calculateDelivery']);
