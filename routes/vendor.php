@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Vendor\ItemController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Vendor\SubscriptionController;
 
@@ -152,9 +151,9 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('bulk-import', 'ItemController@bulk_import_data');
             Route::get('bulk-export', 'ItemController@bulk_export_index')->name('bulk-export-index');
             Route::post('bulk-export', 'ItemController@bulk_export_data')->name('bulk-export');
-            Route::get('flash-sale', 'ItemController@flash_sale')->name('flash_sale');
 
-             Route::get('get-brand-list', [ItemController::class, 'getBrandList'])->name('getBrandList');
+
+            Route::get('flash-sale', 'ItemController@flash_sale')->name('flash_sale');
 
         });
 
@@ -303,5 +302,10 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
                     Route::get('vendor-tax-export', 'VendorTaxReportController@vendorTaxExport')->name('vendorTaxExport');
                 });
         });
+        Route::group(['prefix' => 'whatsapp-message', 'as' => 'whatsapp-message.'], function () {
+            Route::get('/', 'VendorWhatsappMessageController@index')->name('index');
+            Route::post('/store', 'VendorWhatsappMessageController@store')->name('store');
+        });
+
     });
 });
