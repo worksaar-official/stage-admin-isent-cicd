@@ -329,7 +329,7 @@
                                 @elseif($order->order_source == 'isent_app')
                                     <span class="badge badge-soft-info">Isent App</span>
                                 @else
-                                    <span class="badge badge-soft-success">Unknown</span>
+                                    <span class="badge badge-soft-success">NA</span>
                                 @endif
                             </td>
                             <!-- worksaar end -->
@@ -544,7 +544,7 @@
                             <label class="custom-control-label"
                                    for="orderStatus8">{{translate('messages.canceled')}}</label>
                         </div>
-                     
+
                     @endif
 
                     <hr class="my-4">

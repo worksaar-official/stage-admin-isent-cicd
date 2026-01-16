@@ -8863,10 +8863,12 @@ Smartly or Earn. ',
   'jpg, jpeg, png, gif, webp. Less Than 2MB' => 'Jpg, jpeg, png, gif, webp. Less Than 2MB',
   'order_is_processing' => 'Order is processing',
   'This text appears as the label or heading above the location search bar. Write it under 50 characters.' => 'This text appears as the label or heading above the location search bar. Write it under 50 characters.',
-  // worksaar start
   'order_source' => 'Order Source',
   'store_code' => 'Store code',
   'local_currency_rate' => 'Local Currency Rate',
   'local_currency_delivery_fees' => 'Local Currency Delivery Fees',
-  // worksaar end
+  'enter_store_code' => 'Enter store code',
+  'API Key' => 'API Key',
+  'Webhook URL' => 'Webhook URL',
+  'picked_up' => 'Picked up',
 );

@@ -512,7 +512,7 @@ class ScheduleOrderCreateController extends Controller
             }
             Helpers::send_push_notif_to_topic($data, $order->zone->deliveryman_wise_topic, 'order_request');
            */
-          
+
            $deliveryMen = \App\Models\DeliveryMan::where('zone_id', $order->zone_id)
                 ->where('type', 'zone_wise')
                 ->where('status', 1)
@@ -524,7 +524,7 @@ class ScheduleOrderCreateController extends Controller
             foreach ($deliveryMen as $dm) {
                 Helpers::send_push_notif_to_device($dm->fcm_token, $data);
             }
-          
+
         }
     }
 

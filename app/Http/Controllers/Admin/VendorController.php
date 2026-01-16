@@ -67,7 +67,7 @@ class VendorController extends Controller
             'name.0' => 'required',
             'name.*' => 'max:191',
             //worksaar start
-            'store_name' => 'required|max:100',
+            'store_code' => 'required|max:100',
             //worksaar end
             'address.0' => 'required',
             'address.*' => 'max:1000',

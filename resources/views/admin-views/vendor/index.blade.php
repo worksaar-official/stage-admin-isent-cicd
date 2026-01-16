@@ -52,6 +52,17 @@
                                         <input type="text" name="name[]" id="default_name" class="form-control"
                                             placeholder="{{ translate('messages.store_name') }}" required>
                                     </div>
+                                    {{-- worksaar start --}}
+                                    <div class="form-group">
+                                        <label class="input-label"
+                                            for="store_code">{{ translate('messages.store_code') }}
+                                            ({{ translate('messages.Default') }})
+                                        </label>
+                                        <input type="text" name="store_code" id="store_code"
+                                            class="form-control" placeholder="{{ translate('messages.enter_store_code') }}"
+                                            required>
+                                    </div>
+                                    {{-- worksaar end --}}
                                     <input type="hidden" name="lang[]" value="default">
                                     <div class="form-group mb-0 error-wrapper">
                                         <label class="input-label"
@@ -76,6 +87,17 @@
                                             <input type="text" name="name[]" id="{{ $lang }}_name"
                                                 class="form-control" placeholder="{{ translate('messages.store_name') }}">
                                         </div>
+                                        <!-- worksaar start -->
+                                        <div class="form-group">
+                                            <label class="input-label"
+                                                for="store_code">{{ translate('messages.store_code') }}
+                                                ({{ translate('messages.Default') }})
+                                            </label>
+                                            <input type="text" name="store_code" id="store_code"
+                                                class="form-control" placeholder="{{ translate('messages.enter_store_code') }}"
+                                                required>
+                                        </div>
+                                        <!-- worksaar end -->
                                         <input type="hidden" name="lang[]" value="{{ $lang }}">
                                         <div class="form-group mb-0 error-wrapper">
                                             <label class="input-label"
@@ -488,7 +510,7 @@
                                         value="{{old('api_key')}}">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4 col-12">
                                     <div class="form-group mb-0">
                                         <label class="input-label" for="webhook_url">{{translate('Webhook URL')}}</label>

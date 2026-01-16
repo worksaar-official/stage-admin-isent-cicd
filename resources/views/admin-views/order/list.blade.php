@@ -320,7 +320,7 @@
                                 @elseif($order->order_source == 'isent_app')
                                     <span class="badge badge-soft-info">Isent App</span>
                                 @else
-                                    <span class="badge badge-soft-success">Default</span>
+                                    <span class="badge badge-soft-success">NA</span>
                                 @endif
                             </td>
                             <!-- worksaar end -->

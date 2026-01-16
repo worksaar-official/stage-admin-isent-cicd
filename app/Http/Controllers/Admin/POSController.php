@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\LocalCurrencyConversion;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\Zone;
 use App\Traits\PlaceNewOrder;
 use Brian2694\Toastr\Facades\Toastr;
+use Http;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\CentralLogics\CustomerLogic;
@@ -968,7 +971,7 @@ class POSController extends Controller
         return response()->json([],200);
     }
     //worksaar start
-     
+
 	public function calculateDelivery(Request $request)
     {
         $request->validate([
