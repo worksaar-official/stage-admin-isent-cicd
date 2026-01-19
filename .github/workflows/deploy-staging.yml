@@ -1,0 +1,32 @@
+name: Deploy to Main (SSH)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAGE_ADMIN_ISENT_ONLINE_MAIN_SSH_KEY }}
+
+      - name: Add host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.STAGE_ADMIN_ISENT_ONLINE_MAIN_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH deploy
+        run: |
+          ssh ${{ secrets.STAGE_ADMIN_ISENT_ONLINE_MAIN_USER }}@${{ secrets.STAGE_ADMIN_ISENT_ONLINE_MAIN_HOST }} << 'EOF'
+            cd /home/isent-stage-admin/htdocs/stage.admin.isent.online
+            git pull origin main
+          EOF
