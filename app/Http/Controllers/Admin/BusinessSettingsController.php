@@ -804,7 +804,9 @@ class BusinessSettingsController extends Controller
                 }
             }
         }
-        $data_values = Setting::whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago'])->get();
+        //worksaar start
+        $data_values = Setting::whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago','ndasenda'])->get();
+        //worksaar end
 
         return view('admin-views.business-settings.payment-index', compact('published_status', 'payment_url', 'data_values'));
     }
@@ -1163,7 +1165,9 @@ class BusinessSettingsController extends Controller
         $request['status'] = $request->status ?? 0;
 
         $validation = [
-            'gateway' => 'required|in:ssl_commerz,paypal,stripe,razor_pay,senang_pay,paytabs,paystack,paymob_accept,paytm,flutterwave,liqpay,bkash,mercadopago',
+            //worksaar start
+            'gateway' => 'required|in:ssl_commerz,paypal,stripe,razor_pay,senang_pay,paytabs,paystack,paymob_accept,paytm,flutterwave,liqpay,bkash,mercadopago,ndasenda',
+            //worksaar end
             'mode' => 'required|in:live,test',
         ];
 
@@ -1258,6 +1262,16 @@ class BusinessSettingsController extends Controller
                 'username' => 'required_if:status,1',
                 'password' => 'required_if:status,1',
             ];
+            // worksaar start
+             } elseif ($request['gateway'] == 'ndasenda') {
+            $additional_data = [
+                'status' => 'required|in:1,0',
+                'api_key' => 'required_if:status,1',
+                'api_secret' => 'required_if:status,1',
+                'base_url' => 'required_if:status,1',
+                'merchant_id' => 'required_if:status,1',
+            ];
+          // worksaar end  
         }
 
         $request->validate(array_merge($validation, $additional_data));
