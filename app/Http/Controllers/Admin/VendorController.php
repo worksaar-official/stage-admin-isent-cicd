@@ -66,6 +66,9 @@ class VendorController extends Controller
             'l_name' => 'nullable|max:100',
             'name.0' => 'required',
             'name.*' => 'max:191',
+            //worksaar start
+            'store_code' => 'required|unique:stores,store_code',
+            // worksaar end
             'address.0' => 'required',
             'address.*' => 'max:1000',
             'latitude' => 'required|numeric',
@@ -138,6 +141,11 @@ class VendorController extends Controller
         $store->vendor_id = $vendor->id;
         $store->zone_id = $request->zone_id;
         $store->tin = $request->tin;
+        // worksaar start
+        $store->api_key = $request->api_key;
+        $store->webhook_url = $request->webhook_url;
+        $store->store_code = $request->store_code;
+        // worksaar end
         $store->tin_expire_date = $request->tin_expire_date;
         $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
         $store->tin_certificate_image = Helpers::upload('store/', $extension, $request->file('tin_certificate_image'));
@@ -180,6 +188,9 @@ class VendorController extends Controller
             'l_name' => 'nullable|max:100',
               'name.0' => 'required',
             'name.*' => 'max:191',
+            // worksaar start
+            'store_code' => 'required|unique:stores,store_code,'.$store->id,
+            // worksaar end
             'address.0' => 'required',
             'address.*' => 'max:1000',
             'email' => 'required|unique:vendors,email,'.$store->vendor->id,
@@ -252,6 +263,11 @@ class VendorController extends Controller
         $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
         $store->tin_certificate_image = $request->has('tin_certificate_image') ? Helpers::update('store/', $store->tin_certificate_image, $extension, $request->file('tin_certificate_image')) : $store->tin_certificate_image;
         $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
+        // worksaar start
+        $store->api_key = $request->api_key;
+        $store->webhook_url = $request->webhook_url;
+		$store->store_code = $request->store_code;
+        // worksaar end
         $store->save();
 
         Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);

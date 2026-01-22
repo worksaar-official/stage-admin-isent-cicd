@@ -272,7 +272,7 @@ class Order extends Model
 
     public function scopeScheduled($query)
     {
-        return $query->whereRaw('created_at <> schedule_at')->where('scheduled', '1');
+        return $query->whereRaw('created_at <> schedule_at')->where('scheduled', '1')->where('order_status', 'scheduled');
     }
 
     public function scopeOrderScheduledIn($query, $interval)

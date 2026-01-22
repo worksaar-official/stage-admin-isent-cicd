@@ -73,6 +73,18 @@
 
 
                                             </div>
+                                            <!-- worksaar start -->
+                                            <div class="form-group">
+                                                <label class="input-label"
+                                                    for="store_code">{{ translate('messages.store_code') }}
+                                                    ({{ translate('messages.Default') }})
+                                                </label>
+                                                <input type="text" name="store_code" id="store_code"
+                                                    class="form-control" placeholder="{{ translate('messages.enter_store_code') }}" value="{{$store->store_code}}"
+                                                    required
+                                                    >
+                                            </div>
+                                            <!-- worksaar end -->
                                             <input type="hidden" name="lang[]" value="default">
                                             <div class="form-group mb-0 error-wrapper">
                                                 <label class="input-label"
@@ -518,6 +530,21 @@
 
                                     </div>
                                 </div>
+
+                                <!-- worksaar start -->
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="api_key">{{translate('api_key')}}</label>
+                                        <input type="text" name="api_key" class="form-control" placeholder="{{ translate('messages.Ex:') }} abc123xyz" value="{{$store->api_key}}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="webhook_url">{{translate('Webhook URL')}}</label>
+                                        <input type="url" name="webhook_url" class="form-control" placeholder="{{ translate('messages.Ex:') }} https://example.com/webhook" value="{{$store->webhook_url}}">
+                                    </div>
+                                </div>
+                                <!-- worksaar end -->
                             </div>
                         </div>
                     </div>

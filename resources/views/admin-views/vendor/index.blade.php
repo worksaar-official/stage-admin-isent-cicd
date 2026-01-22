@@ -64,6 +64,15 @@
                                                 <input type="text" name="name[]" id="default_name" class="form-control"
                                                     placeholder="{{ translate('Business name') }}" required>
                                             </div>
+                                            <div class="form-group">
+                                                <label class="input-label"
+                                                    for="store_code">{{ translate('messages.store_code') }}
+                                                    ({{ translate('messages.Default') }})
+                                                </label>
+                                                <input type="text" name="store_code" id="store_code"
+                                                    class="form-control" placeholder="{{ translate('messages.enter_store_code') }}"
+                                                    required>
+                                            </div>
                                             <input type="hidden" name="lang[]" value="default">
                                             <div class="form-group mb-0 error-wrapper">
                                                 <label class="input-label"
@@ -93,6 +102,15 @@
                                                     </label>
                                                     <input type="text" name="name[]" id="{{ $lang }}_name"
                                                         class="form-control" placeholder="{{ translate('Business name') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="input-label"
+                                                        for="store_code">{{ translate('messages.store_code') }}
+                                                        ({{ translate('messages.Default') }})
+                                                    </label>
+                                                    <input type="text" name="store_code" id="store_code"
+                                                        class="form-control" placeholder="{{ translate('messages.enter_store_code') }}"
+                                                        required>
                                                 </div>
                                                 <input type="hidden" name="lang[]" value="{{ $lang }}">
                                                 <div class="form-group mb-0 error-wrapper">
@@ -462,6 +480,22 @@
 
                                     </div>
                                 </div>
+
+                                <div class="col-md-4 col-12">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="api_key">{{translate('API Key')}}</label>
+                                        <input type="text" name="api_key" class="form-control" placeholder="{{ translate('messages.Ex:') }} abc123xyz"
+                                        value="{{old('api_key')}}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 col-12">
+                                    <div class="form-group mb-0">
+                                        <label class="input-label" for="webhook_url">{{translate('Webhook URL')}}</label>
+                                        <input type="url" name="webhook_url" class="form-control" placeholder="{{ translate('messages.Ex:') }} https://example.com/webhook"
+                                        value="{{old('webhook_url')}}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -511,9 +545,9 @@
                                         <button type="button" id="doc_edit_btn"
                                             class="w-30px h-30 rounded d-flex align-items-center justify-content-center btn--primary btn px-3 icon-btn position-absolute edit__icon-fortin ">
                                             <i class="tio-edit"></i>
-                                            
+
                                         </button>
-                                        
+
                                         <div id="file-assets"
                                             data-picture-icon="{{ asset('public/assets/admin/img/picture.svg') }}"
                                             data-document-icon="{{ asset('public/assets/admin/img/document.svg') }}"

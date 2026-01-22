@@ -171,6 +171,7 @@ trait PlaceNewOrder
 
             $lastId = Order::max('id') ?? 99999;
             $order = new Order();
+            $order->order_source = 'isent_app'; // Orders from Isent App/Web
             $order->id = $lastId + 1;
 
 
