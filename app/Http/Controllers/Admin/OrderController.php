@@ -1391,7 +1391,10 @@ class OrderController extends Controller
         $order->coupon_discount_amount = $coupon_discount_amount;
         $order->store_discount_amount = $store_discount_amount;
         $order->total_tax_amount = $total_tax_amount;
-        $order->order_amount = $total_order_ammount;
+       //worksaar start
+        // $order->order_amount = $total_order_ammount;
+        $order->order_amount = Helpers::round_to_50_or_next_int($total_order_ammount);
+        //worksaar end
         $order->adjusment = $adjustment;
         $order->edited = true;
         $order->save();

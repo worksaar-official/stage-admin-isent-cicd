@@ -463,7 +463,10 @@ trait PlaceNewOrder
             $order->flash_store_discount_amount = round($flash_sale_vendor_discount_amount, config('round_up_to_digit'));
 
             //DM TIPS
-            $order->order_amount = $order->order_amount + $order->dm_tips + $order->additional_charge + $order->extra_packaging_amount;
+            //worksaar start
+            // $order->order_amount = $order->order_amount + $order->dm_tips + $order->additional_charge + $order->extra_packaging_amount;
+            $order->order_amount = Helpers::round_to_50_or_next_int($order->order_amount + $order->dm_tips + $order->additional_charge + $order->extra_packaging_amount);
+            //worksaar end
             if ($request->payment_method == 'wallet' && $request->user->wallet_balance < $order->order_amount) {
                 DB::rollBack();
                 return response()->json([

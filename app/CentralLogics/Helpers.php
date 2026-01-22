@@ -4739,6 +4739,22 @@ class Helpers
         return explode('/', $mimeType)[1] ?? '';
     }
 
+    //worksaar start
+    public static function round_to_50_or_next_int(float $amount): float
+    {
+        $floor = floor($amount);
+        $fraction = $amount - $floor;
+
+        if ($fraction <= 0.0000001) {
+            return round($amount, config('round_up_to_digit', 2));
+        } elseif ($fraction <= 0.5) {
+            return round($floor + 0.5, config('round_up_to_digit', 2));
+        } else {
+            return round($floor + 1.0, config('round_up_to_digit', 2));
+        }
+    }
+    //worksaar end
+
 }
 
 
