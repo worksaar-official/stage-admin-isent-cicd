@@ -5,6 +5,37 @@
 
 
     <table>
+        <!-- worksaar start -->
+        @php
+            $orderIds = collect($data['order_transactions'] ?? [])->pluck('order_id')->unique()->values();
+            $payments = \App\Models\PaymentRequest::whereIn('attribute_id', $orderIds)->get()->keyBy('attribute_id');
+            $ndKeys = [
+                'plarftormID_ndasenda' => 'Ndasenda Platform ID',
+                'customerAcc_ndasenda' => 'Ndasenda Customer Account',
+                'methodName_ndasenda' => 'Ndasenda Method Name',
+                'statusName_ndasenda' => 'Ndasenda Status Name',
+                'paymentReference_ndasenda' => 'Ndasenda Payment Reference',
+                'merchantReference_ndasenda' => 'Ndasenda Merchant Reference',
+                'paymentDescription_ndasenda' => 'Ndasenda Payment Description',
+                'merchantDescription_ndasenda' => 'Ndasenda Merchant Description',
+                'merchantFees_ndasenda' => 'Ndasenda Merchant Fees',
+                'customerFees_ndasenda' => 'Ndasenda Customer Fees',
+                'paidDate_ndasenda' => 'Ndasenda Paid Date',
+                'createdDate_ndasenda' => 'Ndasenda Created Date',
+                'correlator_ndasenda' => 'Ndasenda Correlator',
+            ];
+            $ndShowKeys = [];
+            foreach(($data['order_transactions'] ?? []) as $ot){
+                $p = $payments[$ot->order_id] ?? null;
+                if($p){
+                    foreach($ndKeys as $k=>$label){
+                        $v = $p->$k ?? null;
+                        if(!(is_null($v) || $v==='')){ $ndShowKeys[$k] = $label; }
+                    }
+                }
+            }
+        @endphp
+        <!-- worksaar end -->
         <thead>
             <tr>
                 <th>{{ translate('Search_Criteria') }}</th>
@@ -70,6 +101,9 @@
             <th>{{ translate('messages.order_id') }}</th>
             <th>{{ translate('messages.store') }}</th>
             <th>{{ translate('messages.customer_name') }}</th>
+            <!-- worksaar start -->
+            <th>{{ translate('messages.delivery_man') }}</th>
+            <!-- worksaar end -->
             <th>{{ translate('messages.total_item_amount') }}</th>
             <th>{{ translate('messages.item_discount') }}</th>
             <th>{{ translate('messages.coupon_discount') }}</th>
@@ -86,9 +120,17 @@
             <th>{{ translate('commision_on_delivery_charge') }}</th>
             <th>{{ translate('admin_net_income') }}</th>
             <th>{{ translate('store_net_income') }}</th>
+            <!-- worksaar start -->
+            <th>DM Tips</th>
+            <!-- worksaar end -->
             <th>{{ translate('messages.amount_received_by') }}</th>
-            <th>{{ translate('messages.payment_method') }}</th>
-            <th>{{ translate('messages.payment_status') }}</th>
+            <!-- worksaar start -->
+            <th style="border:1px solid #000;padding:6px;text-align:center;vertical-align:middle;">{{ translate('messages.payment_method') }}</th>
+            <th style="border:1px solid #000;padding:6px;text-align:center;vertical-align:middle;">{{ translate('messages.payment_status') }}</th>
+            @foreach($ndShowKeys as $label)
+                <th style="background:#b3b3b3;border:1px solid #000;color:#333;padding:6px;text-align:center;vertical-align:middle;">{{ $label }}</th>
+            @endforeach
+            <!-- worksaar end -->
         </thead>
         <tbody>
         @foreach($data['order_transactions'] as $key => $ot)
@@ -106,10 +148,13 @@
                     @if ($ot->order->customer)
                         {{  $ot->order->customer['f_name'] . ' ' . $ot->order->customer['l_name']  }}
                     @else
-                        {{ translate('messages.not_found') }}
-                    @endif
-                </td>
-                {{-- total_item_amount --}}
+                   <!-- worksaar start -->
+                    {{ translate('messages.not_found') }}
+                @endif
+            </td>
+            <td>{{ $ot?->order?->delivery_man?->full_name ?? 'NA' }}</td>
+            {{-- total_item_amount --}}
+            <!-- worksaar end -->
                 <td>{{ \App\CentralLogics\Helpers::format_currency($ot->order['order_amount'] - $ot->additional_charge - $ot->order['dm_tips']-$ot->order['delivery_charge'] - $ot['tax'] + $ot->order['coupon_discount_amount'] + $ot->order['store_discount_amount']   +$ot->order['flash_admin_discount_amount'] + $ot->order['flash_store_discount_amount'] + $ot->order['ref_bonus_amount'] - $ot->order['extra_packaging_amount']) }}</td>
 
 
@@ -137,7 +182,10 @@
                 {{-- admin_net_income --}}
                 <td>{{ \App\CentralLogics\Helpers::format_currency(($ot->admin_commission  - $ot->order['flash_admin_discount_amount'])) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::format_currency($ot->store_amount -($ot?->order?->order_type == 'parcel' ? 0: $ot->tax)) }}</td>
-                @if ($ot->received_by == 'admin')
+            <!-- worksaar start -->
+                <td>{{ \App\CentralLogics\Helpers::format_currency($ot?->order?->dm_tips ?? 0) }}</td>
+            @if ($ot->received_by == 'admin')
+            <!-- worksaar end -->
                     <td>{{ translate('messages.admin') }}</td>
                 @elseif ($ot->received_by == 'deliveryman')
                     <td>
@@ -153,19 +201,25 @@
                         </div>
                     </td>
                 @elseif ($ot->received_by == 'store')
-                    <td>{{ translate('messages.store') }}</td>
+               <!-- worksaar start -->
+                <td>{{ translate('messages.store') }}</td>
+            @endif
+            <td style="border:1px solid #000;padding:6px;vertical-align:middle;">
+                    {{ translate(str_replace('_', ' ', ($ot->order?->payment_method ?? ''))) }}
+            </td>
+            <td style="border:1px solid #000;padding:6px;vertical-align:middle;">
+                @if ($ot->status)
+                    {{translate('messages.refunded')}}
+                @else
+                    {{translate('messages.completed')}}
                 @endif
-                <td>
-                        {{ translate(str_replace('_', ' ', $ot->order['payment_method'])) }}
-                </td>
-                <td>
-                    @if ($ot->status)
-                        {{translate('messages.refunded')}}
-                    @else
-                        {{translate('messages.completed')}}
-                    @endif
-                </td>
-            </tr>
+            </td>
+            @php $p = $payments[$ot->order_id] ?? null; @endphp
+            @foreach($ndShowKeys as $k=>$label)
+                <td style="border:1px solid #000;padding:6px;vertical-align:middle;">{{ $p?->$k }}</td>
+            @endforeach
+        </tr>
+        <!-- worksaar end -->
         @endforeach
         </tbody>
     </table>

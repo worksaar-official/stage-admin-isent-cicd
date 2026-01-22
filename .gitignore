@@ -19,3 +19,4 @@ docker-local/
 .idea/
 .vscode/
 .ddev/
+storage/app/modules/modules.used
