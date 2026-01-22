@@ -494,4 +494,110 @@ class HomeController extends Controller
         $this->updateActivationConfig(app: 'admin_panel', response: $response);
         return redirect(url('/'));
     }
+
+    public function trackOrder(Request $request, $order_id)
+    {
+        // Get the order with tracking data
+        $order = Order::with([
+            'store:id,name,latitude,longitude,address,phone',
+            'delivery_man:id,f_name,l_name,phone,image',
+            'delivery_history'
+        ])->where('id', $order_id)->first();
+
+        if (!$order) {
+            abort(404, 'Order not found');
+        }
+
+        // Prepare tracking data for map visualization
+        $deliveryAddress = json_decode($order->delivery_address, true);
+
+        $trackingData = [
+            'order_id' => $order->id,
+            'order_status' => $order->order_status,
+            'created_at' => $order->created_at ? (is_object($order->created_at) ? $order->created_at->format('Y-m-d H:i:s') : $order->created_at) : null,
+            'schedule_at' => $order->schedule_at ? (is_object($order->schedule_at) ? $order->schedule_at->format('Y-m-d H:i:s') : $order->schedule_at) : null,
+            'delivery_man' => $order->delivery_man ? [
+                'id' => $order->delivery_man->id,
+                'name' => $order->delivery_man->f_name . ' ' . $order->delivery_man->l_name,
+                'phone' => $order->delivery_man->phone,
+                'image' => $order->delivery_man->image,
+                'current_location' => [
+                    'latitude' => $order->delivery_man->latitude ?? null,
+                    'longitude' => $order->delivery_man->longitude ?? null
+                ]
+            ] : null,
+            'store' => $order->store ? [
+                'id' => $order->store->id,
+                'name' => $order->store->name,
+                'phone' => $order->store->phone,
+                'location' => [
+                    'latitude' => $order->store->latitude,
+                    'longitude' => $order->store->longitude,
+                    'address' => $order->store->address
+                ]
+            ] : null,
+            'customer' => [
+                'location' => $deliveryAddress ? [
+                    'latitude' => $deliveryAddress['latitude'] ?? null,
+                    'longitude' => $deliveryAddress['longitude'] ?? null,
+                    'address' => $deliveryAddress['address'] ?? null
+                ] : null
+            ],
+            'delivery_path' => [],
+            'status_timeline' => [
+                'pending' => $order->pending ? (is_object($order->pending) ? $order->pending->format('Y-m-d H:i:s') : (is_string($order->pending) ? $order->pending : null)) : null,
+                'confirmed' => $order->confirmed ? (is_object($order->confirmed) ? $order->confirmed->format('Y-m-d H:i:s') : (is_string($order->confirmed) ? $order->confirmed : null)) : null,
+                'processing' => $order->processing ? (is_object($order->processing) ? $order->processing->format('Y-m-d H:i:s') : (is_string($order->processing) ? $order->processing : null)) : null,
+                'handover' => $order->handover ? (is_object($order->handover) ? $order->handover->format('Y-m-d H:i:s') : (is_string($order->handover) ? $order->handover : null)) : null,
+                'picked_up' => $order->picked_up ? (is_object($order->picked_up) ? $order->picked_up->format('Y-m-d H:i:s') : (is_string($order->picked_up) ? $order->picked_up : null)) : null,
+                'delivered' => $order->delivered ? (is_object($order->delivered) ? $order->delivered->format('Y-m-d H:i:s') : (is_string($order->delivered) ? $order->delivered : null)) : null,
+            ],
+            'estimated_delivery_time' => $order->store ? $order->store->delivery_time : null,
+            'map_data' => [
+                'store_location' => $order->store ? [
+                    'latitude' => $order->store->latitude,
+                    'longitude' => $order->store->longitude,
+                    'name' => $order->store->name,
+                    'address' => $order->store->address
+                ] : null,
+                'customer_location' => $deliveryAddress ? [
+                    'latitude' => $deliveryAddress['latitude'] ?? null,
+                    'longitude' => $deliveryAddress['longitude'] ?? null,
+                    'address' => $deliveryAddress['address'] ?? null
+                ] : null,
+                'delivery_man_location' => $order->delivery_man ? [
+                    'latitude' => $order->delivery_man->latitude ?? null,
+                    'longitude' => $order->delivery_man->longitude ?? null,
+                    'name' => $order->delivery_man->f_name . ' ' . $order->delivery_man->l_name
+                ] : null
+            ]
+        ];
+
+        // Add delivery history points for the path
+        if ($order->delivery_history) {
+            foreach ($order->delivery_history as $history) {
+                $trackingData['delivery_path'][] = [
+                    'latitude' => $history->latitude ?? null,
+                    'longitude' => $history->longitude ?? null,
+                    'location' => $history->location ?? null,
+                    'timestamp' => $history->created_at ? (is_object($history->created_at) ? $history->created_at->format('Y-m-d H:i:s') : (is_string($history->created_at) ? $history->created_at : null)) : null
+                ];
+            }
+        }
+
+        // Get Google Maps API key
+        $mapApiKey = BusinessSetting::where('key', 'map_api_key')->first();
+        $mapApiKey = $mapApiKey ? $mapApiKey->value : null;
+
+        return view('track-order', compact('trackingData', 'mapApiKey'));
+    }
+
+    // Method to broadcast order updates via WebSocket
+    public function broadcastOrderUpdate($orderId)
+    {
+        // This method would be called when order status or delivery location changes
+        // In a real implementation, you would use a WebSocket broadcasting mechanism
+        // For now, we'll just return a success response
+        return response()->json(['status' => 'success', 'message' => 'Order update broadcasted']);
+    }
 }

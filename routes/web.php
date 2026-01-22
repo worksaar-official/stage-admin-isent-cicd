@@ -258,3 +258,5 @@ Route::get('/image-proxy', function () {
         ->header('Content-Type', $response->header('Content-Type'))
         ->header('Access-Control-Allow-Origin', '*');
 });
+
+Route::get('/track-order/{order_id}', 'HomeController@trackOrder')->name('track-order');

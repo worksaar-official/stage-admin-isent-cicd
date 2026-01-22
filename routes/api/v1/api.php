@@ -1,7 +1,9 @@
 <?php
 
+use App\WebSockets\Handler\DMLocationSocketHandler;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\POSController;
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -326,6 +328,29 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
 
     });
 
+     // Order Create API with Store Integration
+    Route::group(['prefix' => 'order-create'], function () {
+        Route::post('/', 'OrderCreateController@createOrder');
+		Route::put('update-status', 'OrderCreateController@update_order_status');
+        Route::get('/order/{order_id}', 'OrderCreateController@getOrder');
+        Route::get('/order/{order_id}/tracking', 'OrderCreateController@getOrderTracking');
+        Route::get('/store/{store_id}/details', 'OrderCreateController@getStoreDetails');
+    });
+
+    // Scheduled Order Create API with Store Integration
+    Route::group(['prefix' => 'schedule-order-create'], function () {
+        Route::post('/', 'ScheduleOrderCreateController@createScheduledOrder');
+        Route::get('/order/{order_id}', 'ScheduleOrderCreateController@getScheduledOrder');
+        Route::get('/order/{order_id}/tracking', 'ScheduleOrderCreateController@getScheduledOrderTracking');
+        Route::get('/user/orders', 'ScheduleOrderCreateController@getUserScheduledOrders');
+        Route::put('/order/{order_id}/cancel', 'ScheduleOrderCreateController@cancelScheduledOrder');
+    });
+
+    // Item Create API
+    Route::group(['prefix' => 'item-create'], function () {
+        Route::post('/', 'ItemCreateController@createItem');
+    });
+
     Route::get('customer/order/cancellation-reasons', 'OrderController@cancellation_reason');
     Route::get('customer/automated-message', 'OrderController@automatedMessage');
 
@@ -528,3 +553,5 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
     Route::get('get-parcel-cancellation-reasons', 'ConfigController@parcel_cancellation_reason');
 });
 
+Route::post('/delivery/calculate', [POSController::class, 'calculateDelivery']);
+// WebSocketsRouter::webSocket('/delivery-man/live-location', DMLocationSocketHandler::class);

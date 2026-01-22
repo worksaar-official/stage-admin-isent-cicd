@@ -250,6 +250,7 @@
                             <th class="border-0">{{translate('messages.scheduled_at')}}</th>
                         @endif
                         <th class="border-0">{{translate('messages.customer_information')}}</th>
+                        <th class="border-0">{{translate('messages.order_source')}}</th>
                         <th class="border-0">{{translate('messages.parcel_category')}}</th>
                         <th class="border-0">{{translate('messages.Payment_By')}}</th>
                         <th class="border-0">{{translate('messages.total_amount')}}</th>
@@ -317,7 +318,17 @@
                                         class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
                                 @endif
                             </td>
-
+                            <td>
+                                @if($order->order_source == 'api')
+                                    <span class="badge badge-soft-primary">API</span>
+                                @elseif($order->order_source == 'isent_pos')
+                                    <span class="badge badge-soft-info">Isent Web</span>
+                                @elseif($order->order_source == 'isent_app')
+                                    <span class="badge badge-soft-info">Isent App</span>
+                                @else
+                                    <span class="badge badge-soft-success">NA</span>
+                                @endif
+                            </td>
                             <td>
                                 <div>{{Str::limit($order->parcel_category?$order->parcel_category->name:translate('messages.not_found'),20,'...')}}</div>
                             </td>
@@ -528,7 +539,7 @@
                             <label class="custom-control-label"
                                    for="orderStatus8">{{translate('messages.canceled')}}</label>
                         </div>
-                     
+
                     @endif
 
                     <hr class="my-4">

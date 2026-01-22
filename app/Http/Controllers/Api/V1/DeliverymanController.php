@@ -42,7 +42,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use MatanYadaev\EloquentSpatial\Objects\Point;
-
+use Illuminate\Support\Facades\Http;
 class DeliverymanController extends Controller
 {
     public function get_profile(Request $request)
@@ -614,7 +614,73 @@ class DeliverymanController extends Controller
 
         Helpers::send_order_notification($order);
 
-        return response()->json(['message' => translate('Status updated')], 200);
+        // worksaar start
+
+        $ndasendaResponse = null;
+        if ($request['status'] == 'delivered' && !empty($order->store_id)) {
+            $ndasendaResponse = $this->sendNdasendaDeliveryStatus($order->id);
+        }
+        $responseData = ['message' =>  translate('Status updated')];
+
+        if ($ndasendaResponse !== null) {
+            $responseData['ndasenda_response'] = $ndasendaResponse;
+        }
+
+        return response()->json($responseData, 200);
+
+        //worksaar end
+    }
+
+    private function sendNdasendaDeliveryStatus($orderId)
+    {
+        try {
+            $order = Order::with('store')->find($orderId);
+
+            if (!$order) {
+                \Log::error('Ndasenda delivery status update failed: Order not found', [
+                    'order_id' => $orderId
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'Order not found'
+                ];
+            }
+
+            $apiKey = $order->store->api_key ?? 'NDAUzPrG8wmozSvSFw2bAFTYSJ5SZVQiir3';
+            $webhookUrl = $order->store->webhook_url ?? 'https://api.tmpnponline.co.zw/api/v1/ndasenda-delivery-status';
+
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'X-API-Key' => $apiKey
+            ])->post($webhookUrl, [
+                'order_id' => $orderId,
+                'status' => 'wc-completed'
+            ]);
+
+            $responseBody = $response->body();
+            $responseData = [
+                'success' => $response->successful(),
+                'status_code' => $response->status(),
+                'response_body' => $responseBody
+            ];
+
+            if ($response->status() >= 500) {
+                $responseData['error_details'] = 'Ndasenda server error (status code: ' . $response->status() . ')';
+            }
+
+            return $responseData;
+        } catch (\Exception $e) {
+            \Log::error('Ndasenda delivery status update failed: ' . $e->getMessage(), [
+                'order_id' => $orderId
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     public function get_order_details(Request $request)
