@@ -463,7 +463,9 @@
                                     </thead>
                                     <tbody>
                                     @foreach ($details as $key => $detail)
-                                        @if (isset($detail->item_id) && $detail->status)
+                                    <!-- worsaar start -->
+                                         @if ($detail->status)
+                                   <!-- worsaar end -->      
                                                 <?php
                                                 if (!$editing) {
                                                     $detail->item = json_decode($detail->item_details, true);
@@ -497,6 +499,9 @@
                                                                      alt="Image Description">
                                                             </div>
                                                         @else
+                                                        <!-- worksaar start -->
+                                                         @if(isset($detail->item['id']))
+                                                         <!-- worksaar end -->
                                                             <a class="avatar avatar-lg mr-3"
                                                                href="{{ route('admin.item.view', [$detail->item['id'],'module_id' => $order->module_id]) }}">
                                                                 <img class="img-fluid rounded aspect-ratio-1 onerror-image"
@@ -504,6 +509,16 @@
                                                                      data-onerror-image="{{ asset('public/assets/admin/img/100x100/2.png') }}"
                                                                      alt="Image Description">
                                                             </a>
+                                                            <!-- worksaar start -->
+                                                              @else
+                                                                <div class="avatar avatar-xl mr-3">
+                                                                    <img class="img-fluid rounded aspect-ratio-1 onerror-image"
+                                                                         src="{{ $product?->image_full_url ?? asset('public/assets/admin/img/100x100/2.png') }}"
+                                                                         data-onerror-image="{{ asset('public/assets/admin/img/100x100/2.png') }}"
+                                                                         alt="Image Description">
+                                                                </div>
+                                                            @endif
+                                                             <!-- worksaar end -->
                                                         @endif
                                                         <div class="media-body">
                                                             <div>
@@ -938,6 +953,81 @@
                     <!-- End Body -->
                 </div>
                 <!-- End Card -->
+                 <!-- worksaar start -->
+                @php($ndasenda = \App\Models\PaymentRequest::where('attribute','order')->where('attribute_id',$order->id)->where('payment_method','ndasenda')->first())
+                @if($ndasenda && (
+                    $ndasenda->plarftormID_ndasenda ||
+                    $ndasenda->customerAcc_ndasenda ||
+                    $ndasenda->methodName_ndasenda ||
+                    $ndasenda->statusName_ndasenda ||
+                    $ndasenda->paymentReference_ndasenda ||
+                    $ndasenda->merchantReference_ndasenda ||
+                    $ndasenda->paymentDescription_ndasenda ||
+                    $ndasenda->merchantDescription_ndasenda ||
+                    $ndasenda->merchantFees_ndasenda ||
+                    $ndasenda->customerFees_ndasenda ||
+                    $ndasenda->paidDate_ndasenda ||
+                    $ndasenda->createdDate_ndasenda ||
+                    $ndasenda->correlator_ndasenda
+                ))
+                <div class="card mb-3 mb-lg-5">
+                    <div class="card-header">
+                        <h4 class="card-header-title d-flex align-items-center gap-2">
+                            <span class="card-header-icon"><i class="tio-money"></i></span>
+                            <span><strong>NDASENDA transaction details</strong></span>
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @if($ndasenda->customerAcc_ndasenda)
+                                <div class="col-sm-6 col-lg-6">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="w-sm-50 font-weight-bold">Customer Account</span>: 
+                                        <span class="text-dark text-break">{{ $ndasenda->customerAcc_ndasenda }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                            @if($ndasenda->methodName_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Method</span>: <span class="text-dark text-break">{{ $ndasenda->methodName_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->plarftormID_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Platform Name</span>: <span class="text-dark text-break">{{ $ndasenda->plarftormID_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->paymentReference_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Provider Reference</span>: <span class="text-dark text-break">{{ $ndasenda->paymentReference_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->merchantReference_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Merchant Reference</span>: <span class="text-dark text-break">{{ $ndasenda->merchantReference_ndasenda }}</span></div></div>
+                            @endif
+                            @if(!is_null($ndasenda->merchantFees_ndasenda))
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Merchant Charges</span>: <span class="text-dark text-break">{{ $ndasenda->merchantFees_ndasenda }}</span></div></div>
+                            @endif
+                            @if(!is_null($ndasenda->customerFees_ndasenda))
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Customer Charges</span>: <span class="text-dark text-break">{{ $ndasenda->customerFees_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->paidDate_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Paid Date</span>: <span class="text-dark text-break">{{ $ndasenda->paidDate_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->createdDate_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Created Date</span>: <span class="text-dark text-break">{{ $ndasenda->createdDate_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->paymentDescription_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Provider Description</span>: <span class="text-dark text-break">{{ $ndasenda->paymentDescription_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->merchantDescription_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Merchant Description</span>: <span class="text-dark text-break">{{ $ndasenda->merchantDescription_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->statusName_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Transaction Status</span>: <span class="text-dark text-break">{{ $ndasenda->statusName_ndasenda }}</span></div></div>
+                            @endif
+                            @if($ndasenda->correlator_ndasenda)
+                                <div class="col-sm-6 col-lg-6"><div class="d-flex align-items-center gap-2"><span class="w-sm-50 font-weight-bold">Correlator</span>: <span class="text-dark text-break">{{ $ndasenda->correlator_ndasenda }}</span></div></div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+                <!-- worksaar end -->
             </div>
 
             <div class="col-lg-4 order-print-area-right">
