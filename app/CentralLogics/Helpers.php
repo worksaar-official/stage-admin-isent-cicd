@@ -69,7 +69,9 @@ use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\WebpEncoder;
 use App\Exceptions\InvalidUploadException;
 use Illuminate\Http\UploadedFile;
-
+//worksaar start
+use Illuminate\Support\Facades\Log;
+//worksaar end
 
 class Helpers
 {
@@ -1723,6 +1725,10 @@ class Helpers
                 ];
 
                 self::send_push_notif_to_topic($data, 'admin_message', 'order_request', url('/') . '/admin/order/list/all');
+                //worksaar start
+                self::sendVendorWhatsAppItemList($order);
+                self::sendUserWhatsAppNotification($order);
+                //worksaar end
             }
 
             $status = ($order->order_status == 'delivered' && $order->delivery_man) ? 'delivery_boy_delivered' : $order->order_status;
@@ -1820,7 +1826,7 @@ class Helpers
                             self::send_push_notif_to_topic($data, $topic, 'order_request');
                         }
                         self::send_push_notif_to_topic($data, $order->zone->deliveryman_wise_topic, 'order_request');
-
+                        
 
                     }
                 }
@@ -1986,6 +1992,9 @@ class Helpers
             } catch (\Exception $ex) {
                 info($ex->getMessage());
             }
+            //worksaar start
+            self::sendOrderStatusWhatsAppNotification($order);
+            //worksaar end
             return true;
         } catch (\Exception $e) {
             info($e->getMessage());
@@ -4751,6 +4760,202 @@ class Helpers
             return round($floor + 0.5, config('round_up_to_digit', 2));
         } else {
             return round($floor + 1.0, config('round_up_to_digit', 2));
+        }
+    }
+    //worksaar end
+
+    //worksaar start
+    public static function sendVendorWhatsAppItemList($order)
+    {
+        $status = BusinessSetting::where('key', 'whatsapp_status')->first();
+        if (!$status || !$status->value) return false;
+        $vendorPhone = data_get($order, 'store.vendor.phone') ?: data_get($order, 'store.phone');
+        if (!$vendorPhone) return false;
+        $recipient = preg_replace('/[^+\d]+/', '', (string)$vendorPhone);
+        if (!$recipient) return false;
+
+        $itemsText = $order->details()->with('item')->get()->values()->map(function($d, $key){
+            $name = $d->item ? $d->item->name : 'Item';
+            $price = self::format_currency($d->price);
+            $subtotal = self::format_currency($d->price * $d->quantity);
+            return ($key+1).'. '.strtoupper($name)."\n   Quantity: ".$d->quantity."\n   Price: ".$price." each\n   Subtotal: ".$subtotal;
+        })->implode("\n");
+
+        $addressArr = is_array($order->receiver_details) ? $order->receiver_details : (array)json_decode($order->delivery_address, true);
+        $customerName = $order->is_guest ? data_get($addressArr, 'contact_person_name') : trim(($order->customer?->f_name ?? '').' '.($order->customer?->l_name ?? ''));
+        $customerPhone = data_get($addressArr, 'contact_person_number');
+
+        $discountTotal = ($order->store_discount_amount ?? 0) + ($order->coupon_discount_amount ?? 0) + ($order->flash_admin_discount_amount ?? 0) + ($order->flash_store_discount_amount ?? 0) + ($order->ref_bonus_amount ?? 0);
+        $vatTax = $order->total_tax_amount ?? 0;
+        $deliveryTips = $order->dm_tips ?? 0;
+        $deliveryFee = $order->delivery_charge ?? ($order->original_delivery_charge ?? 0);
+
+        $chargesLines = [];
+        if ($discountTotal > 0) $chargesLines[] = 'Discount: -'.self::format_currency($discountTotal);
+        if ($vatTax > 0) $chargesLines[] = 'Vat/Tax: +'.self::format_currency($vatTax);
+        if ($deliveryTips > 0) $chargesLines[] = 'Delivery Man Tips: +'.self::format_currency($deliveryTips);
+        if ($deliveryFee > 0) $chargesLines[] = 'Delivery Fee: +'.self::format_currency($deliveryFee);
+
+        $lines = [
+            '🛍️ NEW ORDER PLACED',
+            '',
+            '📦 Order Details:',
+            $itemsText,
+        ];
+
+        if (count($chargesLines)) {
+            $lines[] = '';
+            $lines[] = 'Order Summary:';
+            foreach ($chargesLines as $cl) { $lines[] = $cl; }
+        }
+
+        $lines[] = '';
+        $lines[] = '💰 Total Amount: '.self::format_currency($order->order_amount);
+        $lines[] = '';
+        $lines[] = 'Customer Details:';
+        $lines[] = 'Name: '.($customerName ?: 'N/A');
+        $lines[] = '📞 Phone: '.($customerPhone ?: 'N/A');
+        $lines[] = 'Store : https://admin.isent.online/login/vendor';
+
+        $message = implode("\n", $lines);
+
+        $endpoint = config('services.whatsapp.endpoint', 'https://sender.worksaar.com/api/send/whatsapp');
+        $secret = BusinessSetting::where('key', 'whatsapp_secret')->first();
+        $secret = $secret ? $secret->value : null;
+        $account = BusinessSetting::where('key', 'whatsapp_account_id')->first();
+        $account = $account ? $account->value : null;
+        if (!$secret || !$account) return false;
+
+        try {
+            $res = \Illuminate\Support\Facades\Http::asMultipart()->post($endpoint, [
+                'secret' => $secret,
+                'account' => $account,
+                'recipient' => $recipient,
+                'type' => 'text',
+                'message' => $message,
+            ]);
+            Log::info('whatsapp_send_result', ['order_id' => $order->id, 'status' => $res->status(), 'body' => $res->body()]);
+            return $res->successful();
+        } catch (\Exception $e) {
+            Log::error('whatsapp_send_error', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    public static function sendUserWhatsAppNotification($order)
+    {
+        $vendor_id = $order->store ? $order->store->vendor_id : null;
+        if (!$vendor_id) return false;
+
+        $credentials = \App\Models\VendorWhatsappMessage::where('vendor_id', $vendor_id)->first();
+        if (!$credentials || !$credentials->status || !$credentials->account_id || !$credentials->secret_key) {
+            return false;
+        }
+
+        $userPhone = $order->customer ? $order->customer->phone : null;
+        if (!$userPhone) return false;
+
+        $recipient = preg_replace('/[^+\d]+/', '', (string)$userPhone);
+
+        $itemsText = $order->details()->with('item')->get()->values()->map(function($d, $key){
+            $name = $d->item ? $d->item->name : ($d->campaign ? $d->campaign->title : 'Item');
+            $price = self::format_currency($d->price);
+            $subtotal = self::format_currency($d->price * $d->quantity);
+            return ($key+1).'. '.strtoupper($name)."\n   Quantity: ".$d->quantity."\n   Price: ".$price." each\n   Subtotal: ".$subtotal;
+        })->implode("\n\n");
+
+        $trackingUrl = 'https://admin.isent.online/track-order/' . $order->id;
+
+        $discountTotal = ($order->store_discount_amount ?? 0) + ($order->coupon_discount_amount ?? 0) + ($order->flash_admin_discount_amount ?? 0) + ($order->flash_store_discount_amount ?? 0) + ($order->ref_bonus_amount ?? 0);
+        $vatTax = $order->total_tax_amount ?? 0;
+        $deliveryTips = $order->dm_tips ?? 0;
+        $deliveryFee = $order->delivery_charge ?? ($order->original_delivery_charge ?? 0);
+
+        $chargesLines = [];
+        if ($discountTotal > 0) $chargesLines[] = 'Discount: -'.self::format_currency($discountTotal);
+        if ($vatTax > 0) $chargesLines[] = 'Vat/Tax: +'.self::format_currency($vatTax);
+        if ($deliveryTips > 0) $chargesLines[] = 'Delivery Man Tips: +'.self::format_currency($deliveryTips);
+        if ($deliveryFee > 0) $chargesLines[] = 'Delivery Fee: +'.self::format_currency($deliveryFee);
+
+        $summary = '';
+        if (count($chargesLines)) { $summary = "\n\nOrder Summary:\n".implode("\n", $chargesLines); }
+
+        $message = "🛍️ NEW ORDER PLACED\n\n📦 We have received your below Order and are working on it:\n\n" .
+                   $itemsText .
+                   $summary .
+                   "\n\n💰 Total Amount: " . self::format_currency($order->order_amount) .
+                   "\n\nTrack your order here:\n" . $trackingUrl .
+                   "\n\n🔴 *How much cash will you use?*\n" .
+                   "\n\nThank you for ordering with us!";
+
+        $endpoint = 'https://sender.worksaar.com/api/send/whatsapp';
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::asMultipart()->post($endpoint, [
+                'secret' => $credentials->secret_key,
+                'account' => $credentials->account_id,
+                'recipient' => $recipient,
+                'type' => 'text',
+                'message' => $message,
+            ]);
+
+            Log::info('whatsapp_user_send_result', ['order_id' => $order->id, 'status' => $response->status(), 'body' => $response->body()]);
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error('whatsapp_user_send_error', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            return false;
+        }   
+    }
+    public static function sendOrderStatusWhatsAppNotification($order)
+    {
+        $vendor_id = $order->store ? $order->store->vendor_id : null;
+        if (!$vendor_id) return false;
+
+        $credentials = \App\Models\VendorWhatsappMessage::where('vendor_id', $vendor_id)->first();
+        if (!$credentials || !$credentials->status || !$credentials->account_id || !$credentials->secret_key) {
+            return false;
+        }
+
+        $userPhone = $order->customer ? $order->customer->phone : null;
+        if (!$userPhone) return false;
+
+        $recipient = preg_replace('/[^+\d]+/', '', (string)$userPhone);
+
+        $status_messages = [
+            'pending'       => 'Your order has been received and is pending confirmation',
+            'confirmed'     => 'Your order has been confirmed and is being prepared',
+            'processing'    => 'Your order is being processed/being prepared',
+            'handover'      => 'Your order is ready for delivery',
+            'picked_up'     => 'Your order has been picked up by the delivery person',
+            'delivered'     => 'Your order has been delivered successfully',
+            'canceled'      => 'Your order has been canceled',
+            'refunded'      => 'Your order has been refunded',
+        ];
+
+        $status_message = $status_messages[$order->order_status] ?? 'Your order status has been updated';
+        
+        $message = "🛍️ ORDER STATUS UPDATE\n\nOrder ID: #" . $order->id . "\n" .
+                   "Status: " . ucfirst($order->order_status) . "\n" .
+                   "Message: " . $status_message . "\n\n" .
+                   "Track your order here:\nhttps://admin.isent.online/track-order/" . $order->id .
+                   "\n\nThank you for ordering with us!";
+
+        $endpoint = 'https://sender.worksaar.com/api/send/whatsapp';
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::asMultipart()->post($endpoint, [
+                'secret' => $credentials->secret_key,
+                'account' => $credentials->account_id,
+                'recipient' => $recipient,
+                'type' => 'text',
+                'message' => $message,
+            ]);
+
+            Log::info('whatsapp_order_status_send_result', ['order_id' => $order->id, 'status' => $response->status(), 'body' => $response->body(), 'status' => $order->order_status]);
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error('whatsapp_order_status_send_error', ['order_id' => $order->id, 'error' => $e->getMessage(), 'status' => $order->order_status]);
+            return false;
         }
     }
     //worksaar end

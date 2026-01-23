@@ -343,8 +343,9 @@
                                 title="{{ translate('messages.business_settings') }}">{{ translate('messages.system_management') }}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
+                        <!-- worksaar start -->
                         <li
-                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/third-party*') || Request::is('admin/business-settings/fcm*') || Request::is('admin/business-settings/offline-payment*') ? 'active' : '' }}">
+                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/third-party*') || Request::is('admin/business-settings/fcm*') || Request::is('admin/business-settings/offline-payment*') || Request::is('admin/business-settings/whatsapp*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
                                 title="{{ translate('messages.3rd_party_&_configurations') }}">
                                 <span class="nav-icon tio-account-square-outlined"></span>
@@ -352,7 +353,8 @@
                                     class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.3rd_party_&_configurations') }}</span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
-                                style="display:{{ Request::is('admin/business-settings/third-party*') || Request::is('admin/business-settings/fcm*') || Request::is('admin/business-settings/login-url-setup*') || Request::is('admin/business-settings/offline-payment*')|| Request::is('admin/business-settings/marketing/*') || Request::is('admin/business-settings/open-ai') || Request::is('admin/business-settings/open-ai-settings') ? 'block' : 'none' }}">
+                                style="display:{{ Request::is('admin/business-settings/third-party*') || Request::is('admin/business-settings/fcm*') || Request::is('admin/business-settings/login-url-setup*') || Request::is('admin/business-settings/offline-payment*') || Request::is('admin/business-settings/whatsapp*') || Request::is('admin/business-settings/marketing/*') || Request::is('admin/business-settings/open-ai') || Request::is('admin/business-settings/open-ai-settings') ? 'block' : 'none' }}">
+                            <!-- worksaar end -->
                                 <li
                                     class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/third-party*') ? 'active' : '' }}">
                                     <a class="nav-link "
@@ -381,7 +383,20 @@
                                             <span
                                                 class="text-truncate">{{ translate('messages.Offline_Payment_Setup') }}</span>
                                         </a>
+                                        <!-- worksaar start -->
                                     </li>
+                                    <li
+                                        class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/whatsapp*') ? 'active' : '' }}">
+                                        <a class="nav-link " href="{{ route('admin.business-settings.whatsapp') }}"
+                                            title="{{ translate('messages.Whatsapp') }}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <!-- <span
+                                                class="text-truncate">{{ translate('messages.Whatsapp') }}</span> -->
+                                                <span
+                                                class="text-truncate"> Whatsapp Message </span>
+                                        </a>
+                                    </li>
+                                    <!-- worksaar end -->
                                 @endif
 
                                 <li class="nav-item @yield('analytics_Script')">

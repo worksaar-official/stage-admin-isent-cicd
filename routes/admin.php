@@ -517,8 +517,10 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('/offline-payment/update', 'OfflinePaymentMethodController@update')->name('offline.update');
             Route::post('/offline-payment/delete', 'OfflinePaymentMethodController@delete')->name('offline.delete');
             Route::get('/offline-payment/status/{id}', 'OfflinePaymentMethodController@status')->name('offline.status');
-
-
+            // worksaar start
+            Route::get('whatsapp', 'BusinessSettingsController@whatsapp')->name('whatsapp');
+            Route::post('whatsapp/update', 'BusinessSettingsController@whatsapp_update')->name('whatsapp-update');
+            // worksaar end
             //db clean
             Route::get('db-index', 'DatabaseSettingController@db_index')->name('db-index');
             Route::post('db-clean', 'DatabaseSettingController@clean_db')->name('clean-db');

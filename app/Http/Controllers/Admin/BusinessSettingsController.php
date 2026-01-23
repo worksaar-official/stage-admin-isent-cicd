@@ -7699,5 +7699,36 @@ class BusinessSettingsController extends Controller
         Toastr::success(translate('messages.React_promotional_banner_status_updated'));
         return back();
     }
+    //worksaar start
+    public function whatsapp()
+    {
+        $whatsapp_status = BusinessSetting::where('key', 'whatsapp_status')->first();
+        $whatsapp_status = $whatsapp_status ? $whatsapp_status->value : 0;
+        $whatsapp_secret = BusinessSetting::where('key', 'whatsapp_secret')->first();
+        $whatsapp_secret = $whatsapp_secret ? $whatsapp_secret->value : '';
+        $whatsapp_account_id = BusinessSetting::where('key', 'whatsapp_account_id')->first();
+        $whatsapp_account_id = $whatsapp_account_id ? $whatsapp_account_id->value : '';
+
+        return view('admin-views.business-settings.whatsapp-index', compact('whatsapp_status', 'whatsapp_secret', 'whatsapp_account_id'));
+    }
+
+    public function whatsapp_update(Request $request)
+    {
+        Helpers::businessUpdateOrInsert(['key' => 'whatsapp_status'], [
+            'value' => $request->status ?? 0
+        ]);
+
+        Helpers::businessUpdateOrInsert(['key' => 'whatsapp_secret'], [
+            'value' => $request->whatsapp_secret
+        ]);
+
+        Helpers::businessUpdateOrInsert(['key' => 'whatsapp_account_id'], [
+            'value' => $request->whatsapp_account_id
+        ]);
+
+        Toastr::success(translate('messages.whatsapp_settings_updated'));
+        return back();
+    }
+    //worksaar end
 
 }
