@@ -9080,4 +9080,6 @@ Smartly or Earn. ',
   'Scheduled_Order_Notification' => 'Scheduled Order Notification',
   'new_scheduled_order_push_description' => 'New scheduled order push description',
   'order_source' => 'Order Source',
+  'vendor_whatsapp_message' => 'Vendor Whatsapp Message',
+  'transection_report' => 'Transaction report',
 );

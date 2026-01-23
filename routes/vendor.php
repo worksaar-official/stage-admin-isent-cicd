@@ -303,5 +303,11 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
                     Route::get('vendor-tax-export', 'VendorTaxReportController@vendorTaxExport')->name('vendorTaxExport');
                 });
         });
+        //worksaar start
+         Route::group(['prefix' => 'whatsapp-message', 'as' => 'whatsapp-message.'], function () {
+            Route::get('/', 'VendorWhatsappMessageController@index')->name('index');
+            Route::post('/store', 'VendorWhatsappMessageController@store')->name('store');
+        });
+        //worksaar end
     });
 });
