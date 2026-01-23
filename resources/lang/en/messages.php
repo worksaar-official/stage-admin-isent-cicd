@@ -9081,4 +9081,8 @@ Smartly or Earn. ',
   'new_scheduled_order_push_description' => 'New scheduled order push description',
   'order_source' => 'Order Source',
   'vendor_whatsapp_message' => 'Vendor Whatsapp Message',
+  'account_id' => 'Account ID',
+  'secret_key' => 'Secret Key',
+  'configuration' => 'Configuration',
+  
 );
